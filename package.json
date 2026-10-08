@@ -1,0 +1,13 @@
+{
+  "name": "fortaleza-explora",
+  "version": "1.0.0",
+  "description": "PWA de busca colaborativa de lugares em Fortaleza (projeto de faculdade: Desenvolvimento Web + Busca/Recuperação de Informação)",
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes browser-sync start --server --files \"index.html,css/*.css,js/*.js\" --no-open --port 5173",
+    "start": "npx --yes serve -l 5173 .",
+    "test": "node --test tests/search.test.mjs tests/agora.test.mjs tests/luz.test.mjs",
+    "paginas": "node ferramentas/gerar-paginas.mjs"
+  },
+  "license": "MIT"
+}

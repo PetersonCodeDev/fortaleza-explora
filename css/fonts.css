@@ -1,0 +1,6 @@
+/* Fontes hospedadas no próprio site (sem pedir ao Google: mais rápido, funciona offline e não expõe o IP do usuário).
+   Subconjunto latino cobre todo o português. Licença: SIL Open Font License. */
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 600 700; font-display: swap;
+  src: url("../vendor/fonts/fraunces-latin.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400 600; font-display: swap;
+  src: url("../vendor/fonts/instrumentsans-latin.woff2") format("woff2"); }

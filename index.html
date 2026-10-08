@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fortaleza Explora</title>
+  <meta name="description" content="O que fazer em Fortaleza agora: lugares, rotas e avisos de quem está lá. Por Pedro Peterson.">
+  <meta name="author" content="Pedro Peterson">
+  <meta name="theme-color" content="#0b6e72">
+  <meta property="og:title" content="Fortaleza Explora">
+  <meta property="og:description" content="O que fazer em Fortaleza agora: lugares, rotas e avisos de quem está lá.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preload" href="vendor/fonts/instrumentsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try{var t=JSON.parse(localStorage.getItem("fx_tema"));document.documentElement.dataset.tema=t||(matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro")}catch(e){}</script>
+</head>
+<body>
+  <header class="topo">
+    <a class="marca" href="./" aria-label="Fortaleza Explora, início">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#0b6e72"/><circle cx="32" cy="29" r="12" fill="#f29a52"/><path d="M6 40c6.5 0 6.5-4 13-4s6.5 4 13 4 6.5-4 13-4 6.5 4 13 4v24H6z" fill="#f4efe4"/><path d="M6 49c6.5 0 6.5-4 13-4s6.5 4 13 4 6.5-4 13-4 6.5 4 13 4" fill="none" stroke="#0b6e72" stroke-width="3" stroke-linecap="round"/></svg>
+      <span class="nome"><b>Fortaleza Explora</b><small>por Pedro Peterson</small></span>
+    </a>
+    <div class="busca">
+      <span class="busca-ic" id="ic-busca"></span>
+      <input id="q" type="search" placeholder="Buscar: praia, comer, museu, Iracema…" autocomplete="off" enterkeyhint="search" aria-label="Buscar lugares" role="combobox" aria-expanded="false" aria-controls="sugestoes">
+      <button id="btn-mic" class="mic" hidden title="Buscar por voz" aria-label="Buscar por voz"></button>
+      <ul id="sugestoes" role="listbox" hidden></ul>
+    </div>
+    <span id="temp" class="temp" hidden></span>
+    <button id="btn-tema" class="icone" title="Alternar tema claro/escuro" aria-label="Alternar tema claro ou escuro"></button>
+  </header>
+
+  <nav class="chips" id="chips" aria-label="Categorias e atalhos"></nav>
+
+  <main class="layout">
+    <section class="mapa-wrap">
+      <div id="map" role="application" aria-label="Mapa de Fortaleza"></div>
+      <div id="faixa" class="faixa" hidden></div>
+      <button id="btn-aqui" class="btn-aqui" hidden>Buscar nesta área</button>
+      <button id="btn-painel" class="fab btn-painel" aria-pressed="false" title="Esconder a lista" aria-label="Esconder ou mostrar a lista"></button>
+      <div class="fabs">
+        <button id="btn-local" class="fab" title="Ir para onde estou" aria-label="Ir para onde estou"></button>
+        <button id="btn-relato" class="fab sol" title="Avisar a comunidade" aria-label="Avisar a comunidade (relato)"></button>
+      </div>
+      <div id="toast" role="status" aria-live="polite" hidden></div>
+      <aside id="folha" class="folha" hidden aria-live="polite"></aside>
+    </section>
+
+    <aside class="painel" id="painel">
+      <button class="alca" id="alca" aria-label="Expandir ou recolher a lista"><span></span></button>
+      <div class="abas" role="tablist">
+        <button role="tab" data-aba="lista" aria-selected="true">Lugares <i id="n-lista"></i></button>
+        <button role="tab" data-aba="roteiro" aria-selected="false">Roteiro <i id="n-roteiro"></i></button>
+        <button role="tab" data-aba="relatos" aria-selected="false">Avisos <i id="n-relatos"></i></button>
+      </div>
+      <div class="conteudo">
+        <div id="aba-lista">
+          <div class="barra-lista">
+            <label class="sel">Ordem
+              <select id="ordenar">
+                <option value="relevancia">Relevância</option>
+                <option value="distancia">Mais perto</option>
+                <option value="nota">Melhor nota</option>
+              </select>
+            </label>
+            <label class="sel" id="lb-raio" hidden>Raio
+              <select id="raio">
+                <option value="0">Qualquer</option>
+                <option value="1">1 km</option>
+                <option value="3">3 km</option>
+                <option value="5">5 km</option>
+                <option value="10">10 km</option>
+              </select>
+            </label>
+            <button class="link" id="btn-surpresa"></button>
+          </div>
+          <ul id="lista" class="cards"></ul>
+          <div id="anuncio" class="anuncio" hidden aria-label="Publicidade"><small>Publicidade</small></div>
+        </div>
+        <div id="aba-roteiro" hidden></div>
+        <div id="aba-relatos" hidden></div>
+        <footer class="rodape">
+          <button class="link" id="btn-instalar" hidden>Instalar como aplicativo</button>
+          <span id="dica-ios" hidden>Para instalar no iPhone: toque em Compartilhar e depois em “Adicionar à Tela de Início”.</span>
+          <span>Feito em Fortaleza por <b>Pedro Peterson</b></span>
+          <span>Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · Leaflet · Open-Meteo</span>
+        </footer>
+      </div>
+    </aside>
+  </main>
+
+  <noscript><p style="padding:24px;font:16px system-ui">O Fortaleza Explora precisa de JavaScript para mostrar o mapa. Ative-o no navegador ou veja a lista de lugares em <a href="lugar/ponte-ingleses/">lugar/</a>.</p></noscript>
+  <script src="vendor/leaflet.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

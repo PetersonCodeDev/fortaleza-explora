@@ -1,0 +1,9 @@
+node_modules/
+*.log
+# gerados no deploy (npm run paginas)
+lugar/
+sitemap.xml
+robots.txt
+
+# estratégia de negócio: fica só no seu computador (o repositório é público)
+docs/NEGOCIO.md

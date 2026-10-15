@@ -59,7 +59,7 @@ export function sugestaoAgora({ periodo: per, chovendo = false, porDoSol }) {
     case "manha":
       return { id: "manha", rotulo: "Boa pra manhã", icone: "sol", pred: (p) => temAlgum(p, ["peixe", "pescadores", "nascer do sol", "caminhada", "trilha", "parque"]) || p.categoria === "natureza" };
     case "almoco":
-      return { id: "almoco", rotulo: "Hora de almoçar", icone: "gastronomia", pred: (p) => p.categoria === "gastronomia" };
+      return { id: "almoco", rotulo: "Hora de almoçar", icone: "gastronomia", pred: (p) => p.categoria === "gastronomia" || temAlgum(p, ["comer", "peixe"]) };
     case "tarde":
       return { id: "tarde", rotulo: "Tarde de praia e passeio", icone: "praia", pred: (p) => p.categoria === "praia" || p.categoria === "lazer" };
     case "noite":

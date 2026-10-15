@@ -37,16 +37,16 @@ ${url ? `<link rel="canonical" href="${url}">` : ""}
 ${foto ? `<meta property="og:image" content="${esc(foto.src)}">` : ""}
 <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../css/fonts.css">
-<style>body{margin:0;background:#f4efe4;color:#1c2a2d;font:16px/1.6 "Instrument Sans",system-ui,sans-serif}main{max-width:680px;margin:auto;padding:24px 18px 48px}h1{font:700 38px/1.1 Fraunces,Georgia,serif;margin:.2em 0}a{color:#0b6e72}.meta{color:#667679}.dica{border-left:3px solid #e2702a;padding-left:12px}.btn{display:inline-block;background:#0b6e72;color:#fff;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:600;margin:12px 8px 12px 0}footer{margin-top:40px;color:#667679;font-size:14px}@media(prefers-color-scheme:dark){body{background:#0f1a1c;color:#ece7da}.meta,footer{color:#92a3a5}a{color:#52c5b8}.btn{background:#52c5b8;color:#06201f}}</style>
+<style>body{margin:0;background:#f4efe4;color:#1c2a2d;font:16px/1.6 "Atkinson Hyperlegible",system-ui,sans-serif}main{max-width:680px;margin:auto;padding:24px 18px 48px}h1{font:400 38px/1.1 Young Serif,Georgia,serif;margin:.2em 0}a{color:#0b6e72}.meta{color:#667679}.dica{border-left:3px solid #e2702a;padding-left:12px}.btn{display:inline-block;background:#0b6e72;color:#fff;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:600;margin:12px 8px 12px 0}footer{margin-top:40px;color:#667679;font-size:14px}@media(prefers-color-scheme:dark){body{background:#0f1a1c;color:#ece7da}.meta,footer{color:#92a3a5}a{color:#52c5b8}.btn{background:#52c5b8;color:#06201f}}</style>
 <script type="application/ld+json">${JSON.stringify(ld)}</script></head>
 <body><main>
 <a href="../../">← Fortaleza Explora</a>
-${foto ? `<img src="${esc(foto.src)}" alt="Foto: ${esc(p.nome)}" style="width:100%;border-radius:8px;margin-top:12px"><p class="meta" style="margin:4px 0 0;font-size:12px">Foto: <a href="${esc(foto.pagina)}">Wikipédia</a></p>` : ""}
+${foto ? `<img src="${esc(foto.src)}" alt="Foto: ${esc(p.nome)}" style="width:100%;border-radius:8px;margin-top:12px"><p class="meta" style="margin:4px 0 0;font-size:12px">Foto: <a href="${esc(foto.pagina)}">${esc(foto.autor)} · ${esc(foto.licenca)}</a></p>` : ""}
 <h1>${esc(p.nome)}</h1>
 <p class="meta">${esc(cat)}${p.bairro ? ` · ${esc(p.bairro)}` : ""} · ${esc(preco(p.preco))}${p.nota ? ` · nota ${String(p.nota).replace(".", ",")}` : ""}</p>
 <p>${esc(p.descricao)}</p>
 ${p.dica ? `<p class="dica"><b>Dica local:</b> ${esc(p.dica)}</p>` : ""}
-<p><b>Horário:</b> ${esc(horarioTexto(p.horario))}. <span class="meta">Confirme no local; horários podem mudar.</span></p>
+<p><b>Horário:</b> ${esc(horarioTexto(p.horario))}. <span class="meta">Horário estimado: confirme no local.</span></p>
 <a class="btn" href="../../#lugar=${encodeURIComponent(p.id)}">Ver no mapa e traçar rota</a>
 <a class="btn" style="background:transparent;color:inherit;border:1px solid #92a3a5" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}">Google Maps</a>
 ${outros.length ? `<h2>Mais em ${esc(cat)}</h2><ul>${outros.map((o) => `<li><a href="../${o.id}/">${esc(o.nome)}</a></li>`).join("")}</ul>` : ""}

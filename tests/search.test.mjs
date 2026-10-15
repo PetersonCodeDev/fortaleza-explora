@@ -5,10 +5,10 @@ import { norm, haversine, levenshtein, score, buscar, aberto, montarRoteiro, sug
 
 test("norm remove acentos e caixa", () => assert.equal(norm("  Praça do FERREIRA "), "praca do ferreira"));
 
-test("haversine: Ponte dos Ingleses -> Mercado Central ~ 2,5 a 3,5 km", () => {
+test("haversine: Ponte dos Ingleses -> Mercado Central ~ 0,8 a 1,2 km", () => {
   const a = DADOS.find((p) => p.id === "ponte-ingleses"), b = DADOS.find((p) => p.id === "mercado-central");
   const d = haversine(a, b);
-  assert.ok(d > 2.3 && d < 3.8, `distância ${d}`);
+  assert.ok(d > 0.8 && d < 1.2, `distância ${d}`);
 });
 
 test("levenshtein", () => { assert.equal(levenshtein("mercado", "mercdo"), 1); assert.equal(levenshtein("a", "a"), 0); });

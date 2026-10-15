@@ -1,6 +1,7 @@
-// Foto de cada lugar vem do artigo da Wikipédia que EU escolhi (CANDIDATOS). O script confirma que o
-// artigo existe e tem imagem, e grava js/fotos.js (com link do artigo para dar o crédito).
-// Uso: node ferramentas/gerar-fotos.mjs        (ver o que foi resolvido antes de publicar)
+// Gera js/fotos.js: uma foto livre por lugar, COM autor e licença (necessários para o crédito correto).
+// Fontes: arquivos do Wikimedia Commons escolhidos e conferidos à mão (DE_COMMONS) ou a imagem principal
+// do artigo da Wikipédia de cada lugar (DE_ARTIGO). Só entram licenças livres; o resto é recusado.
+// Como achar candidatas: node ferramentas/candidatas-commons.mjs   |   Uso: node ferramentas/gerar-fotos.mjs
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,56 +9,76 @@ import { DADOS } from "../js/data.js";
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const UA = { "User-Agent": "FortalezaExplora/1.0 (projeto de faculdade; github.com/PetersonCodeDev/fortaleza-explora)" };
+const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+const limpa = (h) => String(h ?? "").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+const LIVRE = /^(CC BY(-SA)?\b|CC0|Public domain|PD\b|Attribution)/i;
 
-// id do lugar -> título do artigo na Wikipédia em português
-// Conferidos à mão em 15/10/2026 (folha de contatos). Retirados por trazerem logotipo/mapa em vez de foto:
-// museu-ceara, praia-futuro, beach-park.
-const CANDIDATOS = {
-  "ponte-ingleses": "Ponte dos Ingleses",
-  "estatua-iracema": "Estátua de Iracema Guardiã",
-  "dragao-do-mar": "Centro Dragão do Mar de Arte e Cultura",
-  "acquario": "Aquário do Ceará",
-  "mercado-central": "Mercado Central de Fortaleza",
-  "catedral": "Catedral Metropolitana de Fortaleza",
-  "theatro-ja": "Theatro José de Alencar",
-  "praca-ferreira": "Praça do Ferreira",
-  "cine-sao-luiz": "Cine São Luiz (Fortaleza)",
-  "forte-assuncao": "Forte de Nossa Senhora da Assunção",
-  "passeio-publico": "Passeio Público (Fortaleza)",
-  "mauc": "Museu de Arte da Universidade Federal do Ceará",
-  "praia-meireles": "Praia de Meireles",
-  "mercado-peixes": "Mercado dos Peixes",
-  "farol-mucuripe": "Farol do Mucuripe",
-  "estoril": "Estoril (Fortaleza)",
-  "coco": "Parque do Cocó",
-  "sabiaguaba": "Parque Natural Municipal das Dunas de Sabiaguaba",
-  "iguatemi": "Iguatemi Fortaleza",
-  "castelao": "Estádio Governador Plácido Castelo",
-  "cumbuco": "Cumbuco",
-  "caixa-cultural": "Caixa Cultural (Fortaleza)",
-  "lagoa-messejana": "Lagoa de Messejana",
-  "beira-mar-feirinha": "Feira de Artesanato da Beira-Mar",
+// Conferidas visualmente em 15/10/2026 (folha de contatos). Lugares ausentes: sem foto livre adequada.
+const DE_ARTIGO = { // título do artigo na Wikipédia em português
+  "ponte-ingleses": "Ponte dos Ingleses", "dragao-do-mar": "Centro Dragão do Mar de Arte e Cultura", "mercado-central": "Mercado Central de Fortaleza",
+  "catedral": "Catedral Metropolitana de Fortaleza", "theatro-ja": "Theatro José de Alencar", "praca-ferreira": "Praça do Ferreira",
+  "cine-sao-luiz": "Cineteatro São Luiz", "passeio-publico": "Praça dos Mártires", "mauc": "Museu de Arte da Universidade Federal do Ceará",
+  "beira-mar-feirinha": "Feira de Artesanato da Beira-Mar", "praia-meireles": "Praia de Meireles", "farol-mucuripe": "Farol do Mucuripe",
+  "estoril": "Estoril (Fortaleza)", "coco": "Parque Estadual do Cocó", "sabiaguaba": "Parque Natural Municipal das Dunas de Sabiaguaba",
+  "castelao": "Estádio Governador Plácido Castelo", "cumbuco": "Cumbuco", "lagoa-messejana": "Lagoa de Messejana",
+};
+const DE_COMMONS = { // arquivo do Commons
+  "estatua-iracema": "File:Estátua de Iracema Guardiã 02.jpg",
+  "pirata-bar": "File:Rua dos Tabajaras 16.jpg",
+  "museu-ceara": "File:Museu do Ceará. Ph Ivan Stesso.jpg",
+  "praia-futuro": "File:JADEQUEIROZ PRAIA DO FUTURO FORTALEZA CE (40209532045).jpg",
+  "beach-park": "File:Prai park 24 10 06 059.jpg",
+  "parque-liberdade": "File:Cidade da Criança 01.jpg",
+  "cais-pescadores": "File:Enseada do Mucuripe (3272133815).jpg",
+  "caixa-cultural": "File:Antiga Alfândega de Fortaleza 01.jpg",
+  "forte-assuncao": "File:Fortaleza de Nossa Senhora da Assunção.JPG",
 };
 
-const titulos = Object.values(CANDIDATOS);
-const u = `https://pt.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(titulos.join("|"))}&prop=pageimages|info|pageprops&piprop=thumbnail&pithumbsize=720&inprop=url&ppprop=disambiguation&origin=*`;
-const dados = (await (await fetch(u, { headers: UA })).json()).query;
-const mapaRedir = new Map([...(dados.normalized ?? []), ...(dados.redirects ?? [])].map((x) => [x.from, x.to]));
-const resolve = (t) => { let c = t, n = 0; while (mapaRedir.has(c) && n++ < 5) c = mapaRedir.get(c); return c; };
-const porTitulo = new Map(Object.values(dados.pages).map((p) => [p.title, p]));
+async function chama(base, params) {
+  for (let t = 0; t < 6; t++) {
+    const r = await fetch(`${base}?${new URLSearchParams({ format: "json", origin: "*", ...params })}`, { headers: UA });
+    if (r.status === 429) { await espera(15000 * (t + 1)); continue; }
+    return r.json();
+  }
+  throw new Error("limite de pedidos");
+}
+
+// 1) imagem principal de cada artigo
+const arquivos = { ...DE_COMMONS };
+const q = (await chama("https://pt.wikipedia.org/w/api.php", { action: "query", redirects: "1", prop: "pageimages", piprop: "name", titles: Object.values(DE_ARTIGO).join("|") })).query;
+const redir = new Map([...(q.normalized ?? []), ...(q.redirects ?? [])].map((x) => [x.from, x.to]));
+const resolve = (t) => { let c = t, n = 0; while (redir.has(c) && n++ < 5) c = redir.get(c); return c; };
+const porTitulo = new Map(Object.values(q.pages).map((p) => [p.title, p]));
+for (const [id, titulo] of Object.entries(DE_ARTIGO)) {
+  const pag = porTitulo.get(resolve(titulo));
+  if (pag?.pageimage) arquivos[id] = `File:${pag.pageimage.replace(/_/g, " ")}`;
+  else console.log(`  --  ${id}: artigo sem imagem principal`);
+}
+await espera(1500);
+
+// 2) licença, autor e miniatura de cada arquivo (Commons)
+const lista = Object.values(arquivos);
+const info = new Map();
+for (let i = 0; i < lista.length; i += 15) {
+  const d = await chama("https://commons.wikimedia.org/w/api.php", { action: "query", titles: lista.slice(i, i + 15).join("|"), prop: "imageinfo", iiprop: "url|mime|extmetadata", iiurlwidth: "720" });
+  const redirC = new Map([...(d.query.normalized ?? []), ...(d.query.redirects ?? [])].map((x) => [x.from, x.to]));
+  for (const pg of Object.values(d.query.pages)) info.set(pg.title, pg);
+  for (const [de, para] of redirC) if (info.has(para)) info.set(de, info.get(para));
+  await espera(2000);
+}
 
 const fotos = {};
 for (const p of DADOS) {
-  const pedido = CANDIDATOS[p.id];
-  if (!pedido) { console.log(`  --  ${p.id.padEnd(20)} (sem artigo escolhido)`); continue; }
-  const pag = porTitulo.get(resolve(pedido));
-  if (!pag || pag.missing !== undefined) { console.log(`  XX  ${p.id.padEnd(20)} artigo "${pedido}" NÃO existe`); continue; }
-  if (pag.pageprops?.disambiguation !== undefined) { console.log(`  XX  ${p.id.padEnd(20)} "${pag.title}" é página de desambiguação`); continue; }
-  if (!pag.thumbnail) { console.log(`  --  ${p.id.padEnd(20)} "${pag.title}" existe, mas sem foto`); continue; }
-  if (/liberty|chicago|new york/i.test(pag.title)) { console.log(`  XX  ${p.id.padEnd(20)} "${pag.title}" parece ser de outra cidade`); continue; }
-  fotos[p.id] = { src: pag.thumbnail.source.replace(/\?.*$/, ""), pagina: pag.fullurl, titulo: pag.title };
-  console.log(`  OK  ${p.id.padEnd(20)} → ${pag.title}`);
+  const arq = arquivos[p.id];
+  if (!arq) { console.log(`  --  ${p.id.padEnd(20)} sem foto`); continue; }
+  const ii = info.get(arq)?.imageinfo?.[0];
+  if (!ii) { console.log(`  XX  ${p.id.padEnd(20)} arquivo não encontrado: ${arq}`); continue; }
+  const m = ii.extmetadata ?? {};
+  const licenca = limpa(m.LicenseShortName?.value);
+  if (!/^image\/(jpeg|png)$/.test(ii.mime) || !LIVRE.test(licenca)) { console.log(`  XX  ${p.id.padEnd(20)} recusada (${ii.mime}, "${licenca}")`); continue; }
+  fotos[p.id] = { src: ii.thumburl, pagina: ii.descriptionurl, autor: limpa(m.Artist?.value).slice(0, 42) || "Wikimedia Commons", licenca };
+  console.log(`  OK  ${p.id.padEnd(20)} ${arq.slice(5, 52).padEnd(48)} ${licenca} | ${fotos[p.id].autor}`);
 }
-const corpo = `// GERADO por ferramentas/gerar-fotos.mjs: fotos de artigos da Wikipédia (Wikimedia Commons).\n// Cada foto tem a licença indicada na página do artigo (link abaixo, usado como crédito no app).\nexport const FOTOS = ${JSON.stringify(fotos, null, 2)};\n`;
+const corpo = `// GERADO por ferramentas/gerar-fotos.mjs. Fotos do Wikimedia Commons (licenças livres).\n// Cada foto traz autor, licença e o link da página do arquivo, usados como crédito no app.\nexport const FOTOS = ${JSON.stringify(fotos, null, 2)};\n`;
 fs.writeFileSync(path.join(raiz, "js", "fotos.js"), corpo);
 console.log(`\n${Object.keys(fotos).length} fotos gravadas em js/fotos.js`);

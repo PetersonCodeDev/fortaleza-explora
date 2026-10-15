@@ -187,8 +187,8 @@ function carimboSvg(p) {
     <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3" ${ts ? "" : 'stroke-dasharray="5 4"'}/>
     <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.5 3"/>
     <svg x="32" y="19" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconePaths(catDe(p))}</svg>
-    <text x="50" y="68" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="700" font-size="7.2" fill="currentColor">${esc(nomeCurto(p.nome))}</text>
-    ${data ? `<text x="50" y="79" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-weight="600" font-size="7" fill="currentColor">${data}</text>` : ""}
+    <text x="50" y="68" text-anchor="middle" font-family="Young Serif, Georgia, serif" font-weight="400" font-size="7.2" fill="currentColor">${esc(nomeCurto(p.nome))}</text>
+    ${data ? `<text x="50" y="79" text-anchor="middle" font-family="Atkinson Hyperlegible, sans-serif" font-weight="600" font-size="7" fill="currentColor">${data}</text>` : ""}
   </svg>`;
 }
 
@@ -344,7 +344,7 @@ function abrirDetalhe(id, { mover = true } = {}) {
   const c = CATEGORIAS[catDe(p)];
   const fechar = `<button class="x" data-fechar aria-label="Fechar">${icone("fechar", 18)}</button>`;
   const hero = foto
-    ? `<div class="hero"><img src="${esc(foto.src)}" alt="Foto: ${esc(p.nome)}" decoding="async"><a class="credito" href="${esc(foto.pagina)}" target="_blank" rel="noopener">Foto: Wikipédia</a>${fechar}</div>`
+    ? `<div class="hero"><img src="${esc(foto.src)}" alt="Foto: ${esc(p.nome)}" decoding="async"><a class="credito" href="${esc(foto.pagina)}" target="_blank" rel="noopener">Foto: ${esc(foto.autor)} · ${esc(foto.licenca)}</a>${fechar}</div>`
     : "";
   const jaFui = !!estado.passaporte[id];
   abrirFolha(`
@@ -352,7 +352,7 @@ function abrirDetalhe(id, { mover = true } = {}) {
       <div class="folha-topo"><h2>${esc(p.nome)}</h2>${foto ? "" : fechar}</div></div>
     <div class="meta" style="margin-top:-6px">${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${dist != null ? `<span>${formatarDistancia(dist)} de você</span>` : ""}</div>
     <p>${esc(p.descricao || "Sem descrição ainda. Dado do OpenStreetMap.")}</p>
-    ${p.horario ? `<p class="meta" style="margin-top:-6px">${esc(horarioTexto(p.horario))}. Confirme no local.</p>` : ""}
+    ${p.horario ? `<p class="meta" style="margin-top:-6px">${esc(horarioTexto(p.horario))}. Horário estimado: confirme no local.</p>` : ""}
     ${p.dica ? `<div class="dica"><small>Dica local</small>${esc(p.dica)}</div>` : ""}
     <div id="condicoes"></div>
     ${luzHtml(p)}
@@ -531,7 +531,7 @@ const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.k
 async function overpass(consulta) {
   let ultimo;
   for (const url of OVERPASS) {
-    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 18000);
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 12000);
     try {
       const r = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(consulta), signal: ctl.signal });
       if (r.ok) return (await r.json()).elements ?? [];
@@ -584,10 +584,27 @@ const FILTROS_OSM = { // igualdades simples: rápidas no Overpass (alternativas 
 const regexNome = (t) => t.replace(/[.*+?^${}()|[\]\\"]/g, "");
 // radical: "churrasco" e "churrascaria" viram "churrasc" (senão uma não acha a outra)
 const radical = (t) => { const r = t.replace(/(es|os|as|s|o|a|e)$/, ""); return r.length >= 4 ? r : t; };
+/** Segunda fonte: Nominatim (busca por texto do OpenStreetMap). Responde rápido e quase nunca cai. */
+async function nominatim(termo) {
+  const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&addressdetails=1&extratags=1&viewbox=-38.65,-3.68,-38.40,-3.90&bounded=1&q=${encodeURIComponent(termo)}`);
+  if (!r.ok) throw new Error(r.status);
+  return (await r.json()).map((x) => ({
+    type: "nominatim", id: x.place_id, lat: +x.lat, lon: +x.lon,
+    tags: { ...(x.extratags ?? {}), [x.category]: x.type, name: x.name || x.display_name.split(",")[0], "addr:suburb": x.address?.suburb ?? x.address?.neighbourhood ?? "" },
+  })).filter((e) => e.tags.name);
+}
+const CACHE_ONLINE_MS = 24 * 60 * 60 * 1000;
+
 async function buscarOnline(termo) {
   const q = norm(termo);
   if (q.length < 3 || estado.buscasOnline.has(q)) return;
   estado.buscasOnline.add(q); estado.buscandoOnline = true; renderLista();
+  const guardado = ler(`fx_on_${q}`, null); // resultado recente da mesma busca: instantâneo, funciona até sem internet
+  if (guardado && Date.now() - guardado.t < CACHE_ONLINE_MS) {
+    for (const l of guardado.lugares) if (!estado.extras.some((x) => x.id === l.id)) estado.extras.push(l);
+    estado.buscandoOnline = false; render(); enquadrarResultados(); return;
+  }
+  const antes = estado.extras.length;
   const bb = "-3.90,-38.65,-3.68,-38.40"; // Fortaleza
   const palavras = termo.toLowerCase().trim().split(/\s+/).filter((t) => t.length >= 3);
   const filtros = q.split(/\s+/).flatMap((t) => FILTROS_OSM[t] ?? []);
@@ -602,16 +619,20 @@ async function buscarOnline(termo) {
       : [{ c: `nwr["name"~"${regexNome(radical(t))}",i](${bb});`, bonus: 0 }])),
   ];
   // um pedido por cláusula, em paralelo: se o servidor público falhar em um, aproveitamos os outros
-  const respostas = await Promise.allSettled(pedidos.map((x) => overpass(`[out:json][timeout:25];(${x.c});out center 80;`)));
-  const ok = respostas.map((r, i) => ({ r, bonus: pedidos[i].bonus })).filter((x) => x.r.status === "fulfilled");
-  if (!ok.length) {
+  pedidos.push({ bonus: 5 }); // Nominatim, junto com as consultas ao Overpass
+  // cada resposta aparece na lista assim que chega: o servidor lento não segura o que já veio rápido
+  const palavrasQ = q.split(/\s+/);
+  let novos = 0, falhas = 0;
+  await Promise.allSettled(pedidos.map((x, i) => (i === pedidos.length - 1 ? nominatim(termo) : overpass(`[out:json][timeout:25];(${x.c});out center 80;`)).then(
+    (v) => { const n = incorporar(v, palavrasQ, x.bonus); novos += n; if (n) { estado.buscandoOnline = false; render(); } },
+    () => { falhas++; }
+  )));
+  if (falhas === pedidos.length) {
     estado.buscasOnline.delete(q);
     toast("Busca online indisponível agora. Tente de novo em instantes.", 3500);
   } else {
-    let novos = 0; // quem é do tipo certo entra primeiro (e fica melhor ranqueado)
-    for (const x of ok.sort((a, b) => b.bonus - a.bonus)) novos += incorporar(x.r.value, q.split(/\s+/), x.bonus);
     toast(novos ? `${novos} lugares encontrados em Fortaleza` : "Nada encontrado no OpenStreetMap");
-    if (novos) { estado.buscandoOnline = false; render(); enquadrarResultados(); }
+    if (novos) { guardar(`fx_on_${q}`, { t: Date.now(), lugares: estado.extras.slice(antes).slice(0, 120) }); enquadrarResultados(); }
   }
   estado.buscandoOnline = false; render();
 }

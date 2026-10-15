@@ -10,7 +10,7 @@
 
 Fortaleza Explora é um **aplicativo web progressivo (PWA)** que responde "o que faço agora em Fortaleza?". Ele junta **busca inteligente** (tolera erro de digitação, entende intenção e procura no mapa aberto do mundo quando a base local não tem), **mapa e rotas**, **sugestões pela hora, pôr do sol e chuva**, **avisos da comunidade com validade** (ideia do Waze), **roteiro com ordem de visita calculada por algoritmo** e **guia por voz**. É feito **sem framework e sem servidor próprio**: HTML, CSS e JavaScript puros, consumindo APIs abertas, hospedado de graça.
 
-Números: ~2.300 linhas de código próprio, 34 lugares revisados (19 com foto real), 6 roteiros prontos, 8 categorias, 27 testes automatizados, ~120 KB de JavaScript próprio.
+Números: ~2.300 linhas de código próprio, 32 lugares conferidos (27 com foto real e crédito), 6 roteiros prontos, 8 categorias, 27 testes automatizados, ~120 KB de JavaScript próprio.
 
 ---
 
@@ -46,14 +46,14 @@ Aplicação **cliente (SPA)** em módulos ES, sem back-end. Tudo que é do usuá
   index.html ──► │  app.js (interface, estado, eventos)                           │
                  │     ├─ search.js   motor de busca, Haversine, Levenshtein, 2-opt│
                  │     ├─ agora.js    sol (NOAA), período do dia, chuva, luz boa    │
-                 │     ├─ data.js     34 lugares, 8 categorias, 6 roteiros         │
+                 │     ├─ data.js     32 lugares, 8 categorias, 6 roteiros         │
                  │     ├─ icons.js    ícones SVG próprios e marcadores do mapa     │
                  │     ├─ cartao.js   cartão de Stories desenhado em <canvas>      │
                  │     └─ config.js   interruptores do produto (ex.: anúncios)     │
                  │  sw.js (Service Worker)   manifest.webmanifest   localStorage   │
                  └───────────────┬───────────────┬──────────────┬─────────────────┘
                                  │               │              │
-                 Tiles OSM (mapa)   OSRM/FOSSGIS (rotas)   Overpass (busca no OSM)   Open-Meteo (clima)
+                 Tiles OSM (mapa)   OSRM/FOSSGIS (rotas)   Overpass + Nominatim (busca)   Open-Meteo (clima)   Wikimedia Commons (fotos)
 ```
 
 **Decisão de projeto:** a lógica de busca está em `search.js`/`agora.js`, **módulos puros sem DOM**. Por isso são testados em Node e poderiam rodar num servidor no futuro sem reescrita.
@@ -74,7 +74,7 @@ Aplicação **cliente (SPA)** em módulos ES, sem back-end. Tudo que é do usuá
 | Biblioteca | Versão | Licença | Uso |
 |---|---|---|---|
 | **Leaflet** | 1.9.4 | BSD-2 | Mapa interativo |
-| **Fraunces** e **Instrument Sans** | — | SIL OFL | Tipografia (subconjunto latino, servida localmente) |
+| **Young Serif**, **Atkinson Hyperlegible** e **Caveat** | — | SIL OFL | Títulos em serifa, texto desenhado para legibilidade (Braille Institute) e anotações à mão; subconjunto latino servido localmente |
 
 ### 4.3 APIs e dados abertos (todas gratuitas, sem chave)
 | Serviço | O que entrega | Como usamos |
@@ -125,7 +125,7 @@ Implementada em `js/search.js`.
 9. **Busca híbrida (local → mundo):** se a base curada não tem resultado, o app consulta o OpenStreetMap em toda Fortaleza.
    - **Tipo antes de nome:** para termos que são *tipos* de lugar ("churrascaria", "pizzaria"), primeiro traz quem **é** daquele tipo (tag `cuisine`) e dá **bônus de relevância**; depois quem tem o nome parecido, **só entre restaurantes** (evita "Duty Free do Churrasco").
    - **Radical simples** (*stemming* mínimo): "churrasco" e "churrascaria" viram "churrasc".
-   - **Resiliência:** uma requisição por cláusula, em paralelo (`Promise.allSettled`); se o servidor público falhar em uma, aproveita as outras, com servidor reserva e cache das consultas já feitas.
+   - **Resiliência:** **duas fontes em paralelo**: Overpass (por tipo e por nome) e Nominatim (busca por texto). Cada resposta entra na lista **assim que chega** (`Promise.allSettled`), então o servidor lento não segura o que já veio. O resultado fica **guardado por 24 h** no aparelho: repetir a busca é instantâneo e funciona até sem internet.
    - Aprendizado técnico: o Overpass devolve erro 504 para expressões regulares complexas (classes de acento); a solução foi usar texto simples e igualdades de tag.
 10. **Avaliação (próximo passo acadêmico):** rotular ~30 consultas e medir precisão@k e MRR.
 
@@ -210,7 +210,7 @@ Os testes cobrem também níveis de UV/vento/onda, conselhos, selos do passaport
 ## 12. Publicação e SEO
 
 - **GitHub Pages** via GitHub Actions (`.github/workflows/pages.yml`): testa → gera páginas → publica. Passo a passo em `docs/HOSPEDAR.md`.
-- **Páginas estáticas por lugar** (`ferramentas/gerar-paginas.mjs`): 34 páginas com título, descrição, Open Graph e **JSON-LD (Schema.org `TouristAttraction`)**, mais `sitemap.xml` e `robots.txt`. Objetivo: o Google encontrar "o que fazer em Fortaleza".
+- **Páginas estáticas por lugar** (`ferramentas/gerar-paginas.mjs`): 32 páginas com título, descrição, Open Graph e **JSON-LD (Schema.org `TouristAttraction`)**, mais `sitemap.xml` e `robots.txt`. Objetivo: o Google encontrar "o que fazer em Fortaleza".
 
 ---
 
@@ -228,8 +228,8 @@ Os testes cobrem também níveis de UV/vento/onda, conselhos, selos do passaport
 
 ## 14. Limitações (para falar com franqueza)
 
-- **Dados da base:** coordenadas e horários dos 34 lugares são **aproximados** e precisam de conferência presencial.
-- **Fotos:** vêm da Wikipédia/Commons (cada uma com a licença da sua página; o app mostra o crédito com link). 19 de 34 lugares têm foto; outras 3 candidatas foram descartadas na conferência por trazerem logotipo ou mapa. As fotos foram conferidas visualmente uma a uma.
+- **Dados da base:** as **posições foram conferidas** contra o OpenStreetMap e a Wikipédia (duas fontes independentes; minhas estimativas iniciais erravam até 1,6 km). Os **horários continuam estimados** e aparecem como "horário estimado: confirme no local". As descrições seguem os artigos da Wikipédia; o que não consegui confirmar (um aquário, uma roda-gigante e uma tapiocaria genérica) foi **retirado**.
+- **Fotos:** 27 dos 32 lugares têm foto livre do Wikimedia Commons; o app mostra **autor, licença e link** do arquivo em cada uma. Foram conferidas visualmente e descartadas as que traziam logotipo, mapa ou o lugar errado (a conferência pegou, por exemplo, um forte em Portugal no lugar da Fortaleza de Nossa Senhora da Assunção). Cinco lugares ficam sem foto por falta de imagem livre adequada.
 - **Condições do mar** vêm de modelo meteorológico (grade de ~5 km), não de sensor na praia: são uma estimativa.
 - **Avisos da comunidade** ficam no aparelho de quem os cria; para valerem entre usuários é preciso um servidor e moderação.
 - **Serviços públicos gratuitos** (tiles, rotas, Overpass) têm política de uso justo e às vezes dão erro 504; o app mostra aviso e plano B (linha reta). Em produção com muito uso será preciso contratar provedor (MapTiler, Mapbox, Stadia) ou hospedar o próprio.
@@ -271,7 +271,7 @@ Teste tudo uma vez antes, com internet. Se a rede da sala for ruim, mostre prime
 ## 16. Perguntas que o professor pode fazer (e respostas curtas)
 
 - **"Por que não usou React?"** O escopo cabe em módulos nativos; ficou com ~100 KB, sem build, e eu domino cada linha. Se crescer, a lógica pura já está separada para migrar.
-- **"De onde vêm os dados?"** Base curada por mim (34 lugares) + OpenStreetMap via Overpass. Rotas pelo OSRM, clima pela Open-Meteo, mapa pelo OSM.
+- **"De onde vêm os dados?"** Base curada (32 lugares conferidos) + OpenStreetMap via Overpass. Rotas pelo OSRM, clima pela Open-Meteo, mapa pelo OSM.
 - **"Como funciona o ranking?"** Pontuação por campo com pesos, expansão por sinônimos, tolerância a erro com Levenshtein e desempate por nota e distância (Haversine).
 - **"E se o servidor de rotas cair?"** Plano B: linha reta com estimativa de tempo, avisando o usuário.
 - **"Funciona offline?"** A base local, a interface e o cálculo do sol sim; mapa novo, rotas, clima e busca online precisam de internet.

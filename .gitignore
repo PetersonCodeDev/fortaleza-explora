@@ -7,3 +7,7 @@ robots.txt
 
 # estratégia de negócio: fica só no seu computador (o repositório é público)
 docs/NEGOCIO.md
+
+# resultados intermediários das ferramentas de conferência
+ferramentas/candidatas.json
+ferramentas/coords-osm.json

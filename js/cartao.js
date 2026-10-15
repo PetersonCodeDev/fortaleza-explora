@@ -15,11 +15,11 @@ function reduzir(x, texto, largura) {
 
 /** paradas: [{nome, bairro, lat, lon}] já na ordem de visita. Retorna um Blob PNG. */
 export async function gerarCartao({ paradas, totalKm, titulo = "Meu dia em Fortaleza" }) {
-  try { await Promise.all([document.fonts.load("700 80px Fraunces"), document.fonts.load("600 36px 'Instrument Sans'")]); } catch {}
+  try { await Promise.all([document.fonts.load("400 80px Young Serif"), document.fonts.load("400 36px 'Atkinson Hyperlegible'"), document.fonts.load("700 36px 'Atkinson Hyperlegible'")]); } catch {}
   const W = 1080, H = 1920;
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const x = c.getContext("2d");
-  const titulos = "Fraunces, Georgia, serif", corpo = "'Instrument Sans', system-ui, sans-serif";
+  const titulos = "Young Serif, Georgia, serif", corpo = "'Atkinson Hyperlegible', system-ui, sans-serif";
 
   x.fillStyle = AREIA; x.fillRect(0, 0, W, H);
 
@@ -36,7 +36,7 @@ export async function gerarCartao({ paradas, totalKm, titulo = "Meu dia em Forta
   }
   x.fillStyle = "#fff"; x.textBaseline = "alphabetic";
   x.font = `600 34px ${corpo}`; x.fillText("FORTALEZA EXPLORA", 80, 150);
-  x.font = `700 92px ${titulos}`;
+  x.font = `400 92px ${titulos}`;
   const linhas = titulo.length > 16 ? [titulo.slice(0, titulo.lastIndexOf(" ", 16)), titulo.slice(titulo.lastIndexOf(" ", 16) + 1)] : [titulo];
   linhas.forEach((l, i) => x.fillText(l, 80, 260 + i * 100));
 
@@ -66,14 +66,14 @@ export async function gerarCartao({ paradas, totalKm, titulo = "Meu dia em Forta
   mostradas.forEach((p, i) => {
     x.fillStyle = MAR; x.beginPath(); x.arc(112, y - 14, 30, 0, Math.PI * 2); x.fill();
     x.fillStyle = "#fff"; x.font = `700 30px ${corpo}`; x.textAlign = "center"; x.fillText(String(i + 1), 112, y - 3); x.textAlign = "left";
-    x.fillStyle = TINTA; x.font = `600 42px ${corpo}`; x.fillText(reduzir(x, p.nome, 800), 170, y - 4);
+    x.fillStyle = TINTA; x.font = `700 38px ${corpo}`; x.fillText(reduzir(x, p.nome, 840), 170, y - 4);
     if (p.bairro) { x.fillStyle = MUTED; x.font = `400 30px ${corpo}`; x.fillText(p.bairro, 170, y + 34); }
     y += 88;
   });
   if (paradas.length > max) { x.fillStyle = MUTED; x.font = `500 32px ${corpo}`; x.fillText(`+ ${paradas.length - max} paradas`, 170, y); }
 
   // rodapé
-  x.fillStyle = TINTA; x.font = `700 40px ${titulos}`;
+  x.fillStyle = TINTA; x.font = `400 40px ${titulos}`;
   x.fillText(`${paradas.length} paradas · ${formatarDistancia(totalKm)}`, 80, 1760);
   x.fillStyle = MUTED; x.font = `500 30px ${corpo}`;
   x.fillText("Fortaleza Explora · por Pedro Peterson", 80, 1825);

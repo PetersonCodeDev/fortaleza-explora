@@ -1,6 +1,13 @@
 /* Fontes hospedadas no próprio site (sem pedir ao Google: mais rápido, funciona offline e não expõe o IP do usuário).
-   Subconjunto latino cobre todo o português. Licença: SIL Open Font License. */
-@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 600 700; font-display: swap;
-  src: url("../vendor/fonts/fraunces-latin.woff2") format("woff2"); }
-@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400 600; font-display: swap;
-  src: url("../vendor/fonts/instrumentsans-latin.woff2") format("woff2"); }
+   Subconjunto latino cobre todo o português. Licença de todas: SIL Open Font License.
+   - Young Serif: títulos (serifa robusta, com cara de livro)
+   - Atkinson Hyperlegible: texto (desenhada pelo Braille Institute para ser fácil de ler)
+   - Caveat: anotações à mão (dicas locais) */
+@font-face { font-family: "Young Serif"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../vendor/fonts/youngserif.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../vendor/fonts/atkinson-400.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("../vendor/fonts/atkinson-700.woff2") format("woff2"); }
+@font-face { font-family: "Caveat"; font-style: normal; font-weight: 500 700; font-display: swap;
+  src: url("../vendor/fonts/caveat.woff2") format("woff2"); }

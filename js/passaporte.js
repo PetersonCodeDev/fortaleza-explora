@@ -6,7 +6,7 @@ export const SELOS = [
   { id: "praieiro", nome: "Praieiro", desc: "Visite 3 praias", ok: (r) => (r.porCategoria.praia?.feitos ?? 0) >= 3 },
   { id: "historia", nome: "Guardião da história", desc: "Visite 4 lugares de história", ok: (r) => (r.porCategoria.historia?.feitos ?? 0) >= 4 },
   { id: "cultura", nome: "Rato de museu", desc: "Visite 3 lugares de cultura", ok: (r) => (r.porCategoria.cultura?.feitos ?? 0) >= 3 },
-  { id: "garfo", nome: "Boa de garfo", desc: "Visite 2 lugares para comer", ok: (r) => (r.porCategoria.gastronomia?.feitos ?? 0) >= 2 },
+  { id: "garfo", nome: "Boa de garfo", desc: "Visite um lugar para comer", ok: (r) => (r.porCategoria.gastronomia?.feitos ?? 0) >= 1 },
   { id: "natureza", nome: "Pé na trilha", desc: "Visite 2 lugares de natureza", ok: (r) => (r.porCategoria.natureza?.feitos ?? 0) >= 2 },
   { id: "coruja", nome: "Coruja", desc: "Visite um lugar da noite", ok: (r) => (r.porCategoria.noite?.feitos ?? 0) >= 1 },
   { id: "explorador", nome: "Explorador", desc: "Visite 10 lugares", ok: (r) => r.feitos >= 10 },

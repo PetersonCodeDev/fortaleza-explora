@@ -58,13 +58,17 @@ export const pinSvg = (nome, cor, sel = false) =>
 /** Caminhos crus de um ícone, para desenhar dentro de outro SVG (usado no carimbo do passaporte). */
 export const iconePaths = (nome) => P[nome] ?? "";
 
-/** Jangada desenhada à mão (símbolo de Fortaleza) para estados vazios. Cores vêm do tema. */
-export const jangadaSvg = `<svg class="jangada" viewBox="0 0 220 130" aria-hidden="true">
-  <path d="M8 104c16 0 16-7 32-7s16 7 32 7 16-7 32-7 16 7 32 7 16-7 32-7 16 7 20 7" fill="none" style="stroke:var(--mut)" stroke-width="2" stroke-linecap="round" opacity=".55"/>
-  <path d="M30 116c16 0 16-6 32-6s16 6 32 6 16-6 32-6 16 6 32 6" fill="none" style="stroke:var(--mut)" stroke-width="2" stroke-linecap="round" opacity=".35"/>
-  <g style="stroke:var(--ink)" stroke-width="2.4" stroke-linecap="round"><path d="M52 90h116"/><path d="M58 96h104"/><path d="M64 102h92"/></g>
-  <path d="M110 26v64" style="stroke:var(--ink)" stroke-width="2.6" stroke-linecap="round"/>
-  <path d="M113 30l48 54h-48z" style="fill:var(--sol)"/>
-  <path d="M107 38L72 84h35z" style="fill:var(--pri)"/>
-  <path d="M113 30l-3-6 9 3z" style="fill:var(--sol)"/>
+/** Jangada em estilo xilogravura (arte de cordel do Ceará): traço grosso e hachuras. Cores vêm do tema. */
+export const jangadaSvg = `<svg class="jangada" viewBox="0 0 220 132" aria-hidden="true">
+  <defs>
+    <pattern id="jg-tinta" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><line x1="0" y1="0" x2="0" y2="5" stroke-width="2.2" style="stroke:var(--ink)"/></pattern>
+    <pattern id="jg-sol" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="5" stroke-width="2.4" style="stroke:var(--sol)"/></pattern>
+  </defs>
+  <g style="stroke:var(--sol)" stroke-width="3" stroke-linecap="round"><circle cx="178" cy="34" r="9" fill="none"/><path d="M178 16v-5M193 21l3-3M198 36h5M163 21l-3-3M158 36h-5"/></g>
+  <path d="M110 18v78" style="stroke:var(--ink)" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M114 22l56 66h-56z" fill="url(#jg-tinta)" style="stroke:var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M106 36L72 88h34z" fill="url(#jg-sol)" style="stroke:var(--sol)" stroke-width="3" stroke-linejoin="round"/>
+  <g style="stroke:var(--ink)" stroke-width="7" stroke-linecap="round"><path d="M42 97h140"/><path d="M52 108h120"/></g>
+  <g style="stroke:var(--bg)" stroke-width="1.6" stroke-linecap="round"><path d="M66 97h6M96 97h6M130 97h6M158 97h6M78 108h6M114 108h6M146 108h6"/></g>
+  <g fill="none" style="stroke:var(--ink)" stroke-width="3" stroke-linecap="round"><path d="M10 119q10-8 20 0t20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0"/><path d="M30 127q8-6 16 0t16 0 16 0 16 0 16 0 16 0 16 0" stroke-width="2" opacity=".6"/></g>
 </svg>`;

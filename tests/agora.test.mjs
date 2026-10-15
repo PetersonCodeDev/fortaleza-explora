@@ -33,7 +33,7 @@ test("chuva", () => {
 test("sugestão: chuva leva a lugares cobertos; pôr do sol a mirantes; cada período dá resultado", () => {
   const por = new Date("2026-10-07T17:30:00-03:00");
   const chuva = sugestaoAgora({ periodo: "tarde", chovendo: true, porDoSol: por });
-  assert.ok(DADOS.filter(chuva.pred).some((p) => p.id === "acquario"));
+  assert.ok(DADOS.filter(chuva.pred).some((p) => p.id === "mauc"));
   assert.ok(!DADOS.filter(chuva.pred).some((p) => p.id === "praia-futuro"));
   for (const per of ["madrugada", "manha", "almoco", "tarde", "porDoSol", "noite"]) {
     const s = sugestaoAgora({ periodo: per, porDoSol: por });

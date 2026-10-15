@@ -10,7 +10,7 @@
 
 Fortaleza Explora é um **aplicativo web progressivo (PWA)** que responde "o que faço agora em Fortaleza?". Ele junta **busca inteligente** (tolera erro de digitação, entende intenção e procura no mapa aberto do mundo quando a base local não tem), **mapa e rotas**, **sugestões pela hora, pôr do sol e chuva**, **avisos da comunidade com validade** (ideia do Waze), **roteiro com ordem de visita calculada por algoritmo** e **guia por voz**. É feito **sem framework e sem servidor próprio**: HTML, CSS e JavaScript puros, consumindo APIs abertas, hospedado de graça.
 
-Números: ~1.900 linhas de código próprio, 34 lugares revisados, 6 roteiros prontos, 8 categorias, 22 testes automatizados, ~100 KB de JavaScript próprio.
+Números: ~2.300 linhas de código próprio, 34 lugares revisados (19 com foto real), 6 roteiros prontos, 8 categorias, 27 testes automatizados, ~120 KB de JavaScript próprio.
 
 ---
 
@@ -19,6 +19,21 @@ Números: ~1.900 linhas de código próprio, 34 lugares revisados, 6 roteiros pr
 - **Problema:** quem visita ou mora em Fortaleza não sabe o que fazer *agora* (está aberto? vai chover? vale a pena ir?). Mapas genéricos mostram milhares de resultados e respondem "onde fica", não "o que fazer".
 - **Proposta:** busca + contexto. A mesma pergunta tem resposta diferente de manhã, no pôr do sol, na chuva.
 - **Diferenciais:** (1) sugestão por contexto (hora/sol/chuva), (2) base curada com "dica local", (3) roteiros prontos e roteiro otimizado, (4) avisos com validade, (5) guia por voz, (6) abre por link, sem cadastro, sem pop-up.
+
+---
+
+## 2.1 Inspirações: o que aprendi com apps do mundo todo
+
+| App (país) | Ideia que me inspirou | Como virou função aqui |
+|---|---|---|
+| **Waze** (Israel) | Informação da comunidade que vence sozinha: relato com validade e confirmação | **Avisos** de lotado/fechado/evento que somem em 6 h e renovam quando alguém confirma |
+| **Citymapper** (Reino Unido) | Mostrar o tempo de todos os modos lado a lado, em vez de escolher um | Rota com **carro, bike e a pé comparados** (6 / 15 / 38 min) numa só tela |
+| **Foursquare/Swarm** (EUA) | Check-in com selos e coleção para dar motivo de voltar | **Passaporte**: carimbo por lugar, barras por categoria e 10 selos |
+| **Surfline / Windy** | Condição do mar e do vento em linguagem simples | **"Agora no local"**: ondas, água, UV e vento, com conselho prático |
+| **PhotoPills / apps de golden hour** | A melhor luz para foto depende da hora do sol | **Luz boa pra foto** e **"saia até 17:04"** para chegar ao pôr do sol |
+| **Time Out / Atlas Obscura** | Curadoria editorial em vez de lista infinita | Base curada com **dica local**, fotos e **roteiros prontos** |
+| **Google Maps** | Busca por tipo de lugar ("churrascaria"), não só por nome | **Busca por tipo** no OpenStreetMap quando a base local não tem |
+| **Guias impressos (Lonely Planet, Michelin)** | Índice limpo, linhas finas, tipografia com personalidade | Visual de **guia de revista**: serifa, linhas finas, inicial em destaque, sem "cartões de IA" |
 
 ---
 
@@ -67,7 +82,9 @@ Aplicação **cliente (SPA)** em módulos ES, sem back-end. Tudo que é do usuá
 | **OpenStreetMap** (tiles) | Imagem do mapa | Camada base do Leaflet; atribuição exibida |
 | **OSRM / FOSSGIS** `routing.openstreetmap.de` | Rotas | `GET /routed-{car,bike,foot}/route/v1/driving/lon,lat;lon,lat?overview=full&geometries=geojson&steps=true` → linha da rota + passos, que **traduzimos para português no cliente** |
 | **Overpass API** | Consulta ao banco do OSM | `POST` com consulta Overpass QL: busca por **tipo** (`cuisine=steak_house`) e por **nome** dentro do retângulo de Fortaleza |
-| **Open-Meteo** | Clima atual | `current=temperature_2m,precipitation,weather_code` para saber se chove e mostrar a temperatura |
+| **Open-Meteo** (previsão) | Clima atual | `current=temperature_2m,precipitation,weather_code` para saber se chove; `uv_index` e `wind_speed_10m` para os detalhes de cada lugar |
+| **Open-Meteo Marine** | Condições do mar | `current=wave_height,wave_period,sea_surface_temperature` (altura e período das ondas, temperatura da água) nas praias |
+| **Wikipédia / Wikimedia Commons** | Fotos reais dos lugares | Script `ferramentas/gerar-fotos.mjs` consulta a API e grava `js/fotos.js` com a foto e o link do artigo (crédito exibido no app) |
 
 ### 4.4 APIs do navegador (Web APIs)
 | API | Uso |
@@ -87,7 +104,7 @@ Aplicação **cliente (SPA)** em módulos ES, sem back-end. Tudo que é do usuá
 | Item | Uso |
 |---|---|
 | **GitHub Pages + GitHub Actions** | Hospedagem gratuita; a cada envio roda os testes, gera as páginas e publica |
-| **Node.js `node:test`** | 22 testes automatizados, sem dependências |
+| **Node.js `node:test`** | 27 testes automatizados, sem dependências |
 | **browser-sync** (só em desenvolvimento) | Recarrega o celular sozinho quando o código muda |
 | **Schema.org JSON-LD** | Dados estruturados em cada página de lugar (SEO) |
 
@@ -128,11 +145,21 @@ Implementada em `js/search.js`.
 - **Luz dourada para foto:** 50 min após o nascer e 50 min antes do pôr do sol.
 - **Fuso:** todo horário usa `America/Fortaleza` (UTC-3, sem horário de verão). Um turista com o celular em outro fuso ainda vê "Aberto/Fechado" corretos.
 
+### 6.1 Condições no local, rotas comparadas e "saia até"
+- **Condições** (`js/condicoes.js`, módulo puro): converte as respostas das APIs em níveis legíveis (UV baixo/alto, vento fraco/forte, mar calmo/agitado) e em **conselhos por regra clara** (ex.: UV ≥ 6 → protetor; ondas ≥ 1,8 m → cuidado com crianças). Não inventa nada: se a API não responde, o bloco não aparece.
+- **Rotas comparadas:** as três rotas (carro, bike, a pé) são pedidas **em paralelo** (`Promise.allSettled`), guardadas em cache por origem/destino e mostradas lado a lado; trocar de modo não refaz a chamada.
+- **"Saia até":** para lugares de pôr do sol, `saiaAte()` calcula `pôr do sol − 15 min − duração da rota` e avisa se já não dá tempo.
+
+### 6.2 Passaporte (`js/passaporte.js`, módulo puro)
+Estado = objeto `{idDoLugar: instante}` no `localStorage`. `resumoPassaporte()` calcula totais por categoria e quais dos 10 selos foram conquistados (regras como "3 praias", "20 lugares"); `selosNovos()` compara antes/depois para avisar "Novo selo!". O ângulo de cada carimbo é derivado do id (hash), então parece batido à mão mas **não muda** a cada abertura.
+
 ---
 
 ## 7. Front-end e design
 
-- **Identidade própria:** paleta areia, verde-mar e laranja-sol (referência à cidade); tipografia serifada "de revista" nos títulos. Evitou-se o visual genérico (degradê roxo, emojis).
+- **Identidade própria:** paleta de papel quente, verde-mar e laranja-sol (referência à cidade); tipografia serifada "de revista" nos títulos. Evitou-se o visual genérico de IA (degradê roxo, emojis, "quadradinhos de ícone", cartões arredondados iguais).
+- **Linguagem de guia impresso:** a lista é um **índice com linhas finas** (não cartões); cada lugar tem **foto real** (ou, sem foto, a **inicial do nome em serifa** sobre fundo hachurado); categorias em texto pequeno e colorido; filtros como texto com sublinhado, não "pílulas". Textura sutil de papel no tema claro.
+- **Elementos desenhados à mão (SVG):** logo (sol e ondas), **jangada** nos estados vazios, **carimbos** do passaporte; textos em tom local ("Bora tentar outra palavra?").
 - **Ícones SVG desenhados à mão** (`icons.js`), em traço único, em vez de emoji (mesma aparência em qualquer aparelho). Os marcadores do mapa são SVG em gota, na cor da categoria.
 - **Tema claro/escuro** por variáveis CSS, seguindo o sistema do usuário e lembrando a escolha; o tema é aplicado antes de pintar a página (sem "piscada").
 - **Menos poluição visual:** nenhum pop-up modal. Detalhe, rota e aviso abrem num painel único; o app **não pede localização ao abrir**; botões flutuantes só aparecem quando fazem sentido.
@@ -174,9 +201,9 @@ Implementada em `js/search.js`.
 
 ## 11. Qualidade: testes
 
-`npm test` roda **22 testes** (`node:test`) cobrindo: normalização, Haversine, Levenshtein, busca (acento, erro de digitação, sinônimos, AND), filtros, raio e ordenação, horário (24 h, dias, **virada de meia-noite**), roteiro (2-opt nunca pior), sugestões, integridade dos dados, **pôr/nascer do sol em todos os meses**, períodos do dia, chuva, luz dourada e validade dos roteiros prontos.
+`npm test` roda **27 testes** (`node:test`) cobrindo: normalização, Haversine, Levenshtein, busca (acento, erro de digitação, sinônimos, AND), filtros, raio e ordenação, horário (24 h, dias, **virada de meia-noite**), roteiro (2-opt nunca pior), sugestões, integridade dos dados, **pôr/nascer do sol em todos os meses**, períodos do dia, chuva, luz dourada e validade dos roteiros prontos.
 
-Os testes usam instantes explícitos em UTC-3, então **passam igual em qualquer fuso** (conferido com `TZ=UTC`, que é o do servidor do GitHub). O GitHub Actions roda os testes antes de cada publicação: se um falhar, a versão antiga continua no ar.
+Os testes cobrem também níveis de UV/vento/onda, conselhos, selos do passaporte, ângulo e nome curto do carimbo. Eles usam instantes explícitos em UTC-3, então **passam igual em qualquer fuso** (conferido com `TZ=UTC`, que é o do servidor do GitHub). O GitHub Actions roda os testes antes de cada publicação: se um falhar, a versão antiga continua no ar.
 
 ---
 
@@ -202,6 +229,8 @@ Os testes usam instantes explícitos em UTC-3, então **passam igual em qualquer
 ## 14. Limitações (para falar com franqueza)
 
 - **Dados da base:** coordenadas e horários dos 34 lugares são **aproximados** e precisam de conferência presencial.
+- **Fotos:** vêm da Wikipédia/Commons (cada uma com a licença da sua página; o app mostra o crédito com link). 19 de 34 lugares têm foto; outras 3 candidatas foram descartadas na conferência por trazerem logotipo ou mapa. As fotos foram conferidas visualmente uma a uma.
+- **Condições do mar** vêm de modelo meteorológico (grade de ~5 km), não de sensor na praia: são uma estimativa.
 - **Avisos da comunidade** ficam no aparelho de quem os cria; para valerem entre usuários é preciso um servidor e moderação.
 - **Serviços públicos gratuitos** (tiles, rotas, Overpass) têm política de uso justo e às vezes dão erro 504; o app mostra aviso e plano B (linha reta). Em produção com muito uso será preciso contratar provedor (MapTiler, Mapbox, Stadia) ou hospedar o próprio.
 - **GPS e instalação** exigem HTTPS (ou localhost); por `http://192.168…` na rede local não funcionam.
@@ -227,12 +256,13 @@ Teste tudo uma vez antes, com internet. Se a rede da sala for ruim, mostre prime
 1. **Contexto:** abra o app. Aponte o botão laranja do topo ("Tarde de praia e passeio", "Pôr do sol às 17:26"...) e a temperatura: "o app muda a sugestão conforme hora, sol e chuva".
 2. **Busca com erro:** digite `mercdo` → acha o Mercado Central. Digite `comer` → entende a intenção.
 3. **Busca que vai além da base:** digite `churrascaria` → como não tem na base, procura em Fortaleza no OpenStreetMap e traz churrascarias de verdade (pode levar até uns 20 s; avise a turma).
-4. **Detalhe e rota:** abra a Ponte dos Ingleses → mostre horário, dica local, "luz boa pra foto hoje" e toque em **Carro** para ver a rota com passo a passo.
+4. **Detalhe e rota:** abra a Ponte dos Ingleses → mostre a foto, o horário, a dica local e a "luz boa pra foto hoje". Toque em **Carro** → mostre os **três tempos lado a lado** e o **"saia até…"** do pôr do sol. Depois abra a **Praia do Meireles** e mostre **"Agora no local"** (mar, UV, vento).
 5. **Narração:** toque em **Ouvir** (o navegador lê o lugar em voz alta).
 6. **Roteiro:** aba Roteiro → "Usar este roteiro" (Centro histórico a pé) → o app mostra a melhor ordem e a distância → **Cartão pra Stories**.
-7. **Avisos:** botão laranja do mapa → toque no mapa → publique "Lotado" → mostre que some em 6 h e que dá para confirmar.
-8. **Celular:** abra no celular, arraste a barra de baixo para minimizar e ver o mapa; mostre o tema escuro e "Instalar como aplicativo".
-9. **Código:** abra `js/search.js` e mostre `levenshtein()`, `score()` e `montarRoteiro()`; depois `npm test` com os 22 testes passando.
+7. **Passaporte:** toque em "Já fui aqui" em 2 ou 3 lugares → aba Passaporte → mostre os carimbos, as barras e o selo conquistado.
+8. **Avisos:** botão laranja do mapa → toque no mapa → publique "Lotado" → mostre que some em 6 h e que dá para confirmar.
+9. **Celular:** abra no celular, arraste a barra de baixo para minimizar e ver o mapa; mostre o tema escuro e "Instalar como aplicativo".
+10. **Código:** abra `js/search.js` e mostre `levenshtein()`, `score()` e `montarRoteiro()`; depois `npm test` com os 27 testes passando.
 
 **Plano B se a internet cair:** o app abre e a base local, a busca e o roteiro funcionam; só mapa novo, rotas, clima e busca online dependem da rede.
 
@@ -245,7 +275,7 @@ Teste tudo uma vez antes, com internet. Se a rede da sala for ruim, mostre prime
 - **"Como funciona o ranking?"** Pontuação por campo com pesos, expansão por sinônimos, tolerância a erro com Levenshtein e desempate por nota e distância (Haversine).
 - **"E se o servidor de rotas cair?"** Plano B: linha reta com estimativa de tempo, avisando o usuário.
 - **"Funciona offline?"** A base local, a interface e o cálculo do sol sim; mapa novo, rotas, clima e busca online precisam de internet.
-- **"Como garante que não quebra?"** 22 testes automáticos rodam a cada publicação.
+- **"Como garante que não quebra?"** 27 testes automáticos rodam a cada publicação.
 - **"Qual a complexidade do roteiro?"** Vizinho mais próximo O(n²) e 2-opt; heurística, não ótimo exato (o problema é NP-difícil).
 - **"E a privacidade?"** Nada é enviado a servidor próprio; localização só por ação do usuário; fontes e bibliotecas locais.
 

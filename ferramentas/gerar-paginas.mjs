@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DADOS, CATEGORIAS } from "../js/data.js";
 import { horarioTexto } from "../js/search.js";
+import { FOTOS } from "../js/fotos.js";
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const site = (process.env.SITE_URL ?? "").replace(/\/$/, "");
@@ -16,6 +17,7 @@ fs.rmSync(lugarDir, { recursive: true, force: true });
 
 for (const p of DADOS) {
   const cat = CATEGORIAS[p.categoria].nome;
+  const foto = FOTOS[p.id];
   const titulo = `${p.nome} – ${cat} em Fortaleza | Fortaleza Explora`;
   const url = site ? `${site}/lugar/${p.id}/` : "";
   const ld = {
@@ -32,12 +34,14 @@ for (const p of DADOS) {
 <meta name="author" content="Pedro Peterson">
 ${url ? `<link rel="canonical" href="${url}">` : ""}
 <meta property="og:title" content="${esc(p.nome)} – Fortaleza Explora"><meta property="og:description" content="${esc(p.descricao)}"><meta property="og:type" content="article">
+${foto ? `<meta property="og:image" content="${esc(foto.src)}">` : ""}
 <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../css/fonts.css">
 <style>body{margin:0;background:#f4efe4;color:#1c2a2d;font:16px/1.6 "Instrument Sans",system-ui,sans-serif}main{max-width:680px;margin:auto;padding:24px 18px 48px}h1{font:700 38px/1.1 Fraunces,Georgia,serif;margin:.2em 0}a{color:#0b6e72}.meta{color:#667679}.dica{border-left:3px solid #e2702a;padding-left:12px}.btn{display:inline-block;background:#0b6e72;color:#fff;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:600;margin:12px 8px 12px 0}footer{margin-top:40px;color:#667679;font-size:14px}@media(prefers-color-scheme:dark){body{background:#0f1a1c;color:#ece7da}.meta,footer{color:#92a3a5}a{color:#52c5b8}.btn{background:#52c5b8;color:#06201f}}</style>
 <script type="application/ld+json">${JSON.stringify(ld)}</script></head>
 <body><main>
 <a href="../../">← Fortaleza Explora</a>
+${foto ? `<img src="${esc(foto.src)}" alt="Foto: ${esc(p.nome)}" style="width:100%;border-radius:8px;margin-top:12px"><p class="meta" style="margin:4px 0 0;font-size:12px">Foto: <a href="${esc(foto.pagina)}">Wikipédia</a></p>` : ""}
 <h1>${esc(p.nome)}</h1>
 <p class="meta">${esc(cat)}${p.bairro ? ` · ${esc(p.bairro)}` : ""} · ${esc(preco(p.preco))}${p.nota ? ` · nota ${String(p.nota).replace(".", ",")}` : ""}</p>
 <p>${esc(p.descricao)}</p>

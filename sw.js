@@ -1,9 +1,9 @@
 // Service worker: sempre tenta a rede primeiro para o código do app (você vê a versão nova), cai para o
 // cache se estiver sem internet. Mapa e fontes: usa o cache e atualiza em segundo plano.
-const VERSAO = "fx-v4";
+const VERSAO = "fx-v5";
 const TILES = "fx-tiles";
 const MAX_TILES = 400;
-const SHELL = ["./", "index.html", "css/style.css", "js/app.js", "js/search.js", "js/data.js", "js/icons.js", "js/agora.js", "js/config.js", "js/cartao.js",
+const SHELL = ["./", "index.html", "css/style.css", "js/app.js", "js/search.js", "js/data.js", "js/icons.js", "js/agora.js", "js/config.js", "js/cartao.js", "js/fotos.js", "js/condicoes.js", "js/passaporte.js",
   "vendor/leaflet.js", "vendor/leaflet.css", "css/fonts.css", "vendor/fonts/fraunces-latin.woff2", "vendor/fonts/instrumentsans-latin.woff2", "manifest.webmanifest", "icons/icon.svg"];
 
 self.addEventListener("install", (e) => {

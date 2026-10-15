@@ -39,6 +39,8 @@ const P = {
   som: '<path d="M4 9v6h4l5 4V5L8 9zM16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/>',
   parar: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
   foto: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  carimbo: '<path d="M9 3h6v6.5a3 3 0 0 1-1.5 2.6V14H18a2 2 0 0 1 2 2v2H4v-2a2 2 0 0 1 2-2h4.5v-1.9A3 3 0 0 1 9 9.5z"/><path d="M4 21h16"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   chevron: '<path d="M6 15l6-6 6 6"/>',
 };
 
@@ -52,3 +54,17 @@ export const pinSvg = (nome, cor, sel = false) =>
     <path d="M15 37S2 24.5 2 14.5a13 13 0 0 1 26 0C28 24.5 15 37 15 37z" fill="${cor}" stroke="${sel ? "#fff" : "rgba(255,255,255,.9)"}" stroke-width="${sel ? 2.4 : 1.6}"/>
     <g transform="translate(7.2 6.7) scale(.67)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${P[nome] ?? ""}</g>
   </svg>`;
+
+/** Caminhos crus de um ícone, para desenhar dentro de outro SVG (usado no carimbo do passaporte). */
+export const iconePaths = (nome) => P[nome] ?? "";
+
+/** Jangada desenhada à mão (símbolo de Fortaleza) para estados vazios. Cores vêm do tema. */
+export const jangadaSvg = `<svg class="jangada" viewBox="0 0 220 130" aria-hidden="true">
+  <path d="M8 104c16 0 16-7 32-7s16 7 32 7 16-7 32-7 16 7 32 7 16-7 32-7 16 7 20 7" fill="none" style="stroke:var(--mut)" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+  <path d="M30 116c16 0 16-6 32-6s16 6 32 6 16-6 32-6 16 6 32 6" fill="none" style="stroke:var(--mut)" stroke-width="2" stroke-linecap="round" opacity=".35"/>
+  <g style="stroke:var(--ink)" stroke-width="2.4" stroke-linecap="round"><path d="M52 90h116"/><path d="M58 96h104"/><path d="M64 102h92"/></g>
+  <path d="M110 26v64" style="stroke:var(--ink)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M113 30l48 54h-48z" style="fill:var(--sol)"/>
+  <path d="M107 38L72 84h35z" style="fill:var(--pri)"/>
+  <path d="M113 30l-3-6 9 3z" style="fill:var(--sol)"/>
+</svg>`;

@@ -1,8 +1,11 @@
 import { DADOS, CATEGORIAS, ROTEIROS } from "./data.js";
 import { buscar, sugestoes, montarRoteiro, aberto, haversine, norm, formatarDistancia, formatarDuracao, horarioTexto, esc } from "./search.js";
-import { horaPorDoSol, periodo, estaChovendo, sugestaoAgora, luzDourada, hhmm } from "./agora.js";
+import { horasDoSol, horaPorDoSol, periodo, estaChovendo, sugestaoAgora, luzDourada, hhmm } from "./agora.js";
 import { gerarCartao } from "./cartao.js";
-import { icone, pinSvg } from "./icons.js";
+import { icone, pinSvg, iconePaths, jangadaSvg } from "./icons.js";
+import { FOTOS } from "./fotos.js";
+import { lerCondicoes, linhasCondicoes, conselhos } from "./condicoes.js";
+import { resumoPassaporte, selosNovos, anguloCarimbo, nomeCurto } from "./passaporte.js";
 import { CONFIG } from "./config.js";
 
 /* ---------- utilidades e estado ---------- */
@@ -27,6 +30,7 @@ const estado = {
   origem: null, extras: ler("fx_osm", []), selecionado: null, modoRelato: false, limite: POR_PAGINA,
   agora: { por: null, chovendo: false, temp: null, sugestao: null }, usarAgora: false,
   gaveta: "meio", gavetaAntes: "meio", buscandoOnline: false, buscasOnline: new Set(), guia: null,
+  passaporte: ler("fx_passaporte", {}),
   favoritos: new Set(ler("fx_fav", [])),
   roteiro: ler("fx_roteiro", []),
   relatos: ler("fx_relatos", []).filter((r) => Date.now() - r.ts < TTL_RELATO_MS),
@@ -88,17 +92,17 @@ function render() {
   const filtro = estado.usarAgora ? estado.agora.sugestao?.pred : null;
   resultados = buscar(todos(), { ...estado, filtro });
   sincronizarMarcadores();
-  renderLista(); renderRoteiro(); renderRelatos(); renderChips();
+  renderLista(); renderRoteiro(); renderPassaporte(); renderRelatos(); renderChips();
   $("#n-lista").textContent = resultados.length;
 }
 
 function renderChips() {
   const s = estado.agora.sugestao;
   const itens = [];
-  if (s) itens.push(`<button class="chip agora" data-agora aria-pressed="${estado.usarAgora}">${icone(s.icone, 18)}${esc(s.rotulo)}</button>`);
-  itens.push(`<button class="chip" data-cat="todas" aria-pressed="${estado.categoria === "todas"}">${icone("todas", 18)}Tudo</button>`);
+  if (s) itens.push(`<button class="chip agora" data-agora aria-pressed="${estado.usarAgora}">${icone(s.icone, 16)}${esc(s.rotulo)}</button>`);
+  itens.push(`<button class="chip" data-cat="todas" aria-pressed="${estado.categoria === "todas"}">Tudo</button>`);
   for (const [id, c] of Object.entries(CATEGORIAS))
-    itens.push(`<button class="chip" data-cat="${id}" aria-pressed="${estado.categoria === id}">${icone(id, 18)}${c.nome}</button>`);
+    itens.push(`<button class="chip" style="--c:${c.cor}" data-cat="${id}" aria-pressed="${estado.categoria === id}"><span class="ponto"></span>${c.nome}</button>`);
   itens.push(`<button class="chip sep" data-flag="apenasAbertos" aria-pressed="${estado.apenasAbertos}">Aberto agora</button>`);
   itens.push(`<button class="chip" data-flag="apenasGratis" aria-pressed="${estado.apenasGratis}">Grátis</button>`);
   $("#chips").innerHTML = itens.join("");
@@ -112,15 +116,27 @@ const precoTxt = (n) => (n == null ? "" : n === 0 ? "Grátis" : "$".repeat(n));
 const spanPreco = (p) => (precoTxt(p.preco) ? `<span>${precoTxt(p.preco)}</span>` : "");
 const nota = (n) => n.toFixed(1).replace(".", ",");
 
+const vazioHtml = (texto, extra = "") => `<div class="vazio">${jangadaSvg}<p>${texto}</p>${extra}</div>`;
+
+/** Foto do lugar (Wikipédia) ou, sem foto, a inicial do nome em serifa sobre fundo hachurado, como em guia impresso. */
+function miniatura(p) {
+  const f = FOTOS[p.id];
+  if (f) return `<img class="foto" src="${esc(f.src)}" alt="" loading="lazy" decoding="async" width="76" height="76">`;
+  const ini = (p.nome.replace(/^(o|a|os|as|de|do|da|centro|museu|parque|praia|mercado|teatro)\s+/i, "").trim()[0] ?? p.nome[0] ?? "?").toUpperCase();
+  return `<div class="inicial" style="--c:${corDe(p)}" aria-hidden="true">${esc(ini)}</div>`;
+}
+
 function cardHtml(p, extra = "") {
   const dist = p._dist ?? (estado.origem ? haversine(estado.origem, p) : null);
   const fav = estado.favoritos.has(p.id);
-  return `<li class="card ${p.id === estado.selecionado ? "sel" : ""}" data-id="${esc(p.id)}" tabindex="0">
-    <div class="bolha" style="background:${corDe(p)}24;color:${corDe(p)}">${icone(catDe(p), 22)}</div>
+  const c = CATEGORIAS[catDe(p)];
+  const carimbado = estado.passaporte[p.id] ? `<span class="carimbado">Carimbado</span>` : "";
+  return `<li class="item ${p.id === estado.selecionado ? "atual" : ""}" data-id="${esc(p.id)}" tabindex="0">
+    ${miniatura(p)}
     <div>
+      <span class="cat" style="--c:${c.cor}">${esc(c.nome)}${p.bairro ? ` · ${esc(p.bairro)}` : ""}</span>
       <h3>${esc(p.nome)}</h3>
-      <p class="sub">${esc(p.bairro || "Fortaleza")}${p._osm ? " · OpenStreetMap" : ""}</p>
-      <div class="meta">${p.patrocinado ? `<span class="patroc">Patrocinado</span>` : ""}${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${dist != null ? `<span>${formatarDistancia(dist)}</span>` : ""}${extra}</div>
+      <div class="meta">${p._osm ? "<span>OpenStreetMap</span>" : ""}${p.patrocinado ? `<span class="patroc">Patrocinado</span>` : ""}${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${dist != null ? `<span>${formatarDistancia(dist)}</span>` : ""}${carimbado}${extra}</div>
     </div>
     <button class="fav" data-fav="${esc(p.id)}" aria-label="${fav ? "Remover dos favoritos" : "Favoritar"} ${esc(p.nome)}" aria-pressed="${fav}">${icone("coracao", 20, fav)}</button>
   </li>`;
@@ -132,8 +148,8 @@ function renderLista() {
     ? mostrados.map((p) => cardHtml(p)).join("") +
       (resultados.length > mostrados.length ? `<li><button class="mais" data-mais>Mostrar mais (${resultados.length - mostrados.length})</button></li>` : "")
     : estado.buscandoOnline
-      ? `<li class="vazio">Não achei na nossa base. Procurando “${esc(estado.q)}” em toda Fortaleza…</li>`
-      : `<li class="vazio">Nada por aqui.${estado.q.trim().length >= 3 ? `<br><button class="btn" style="margin-top:12px" data-online>${icone("busca", 16)}Procurar “${esc(estado.q.trim())}” em toda Fortaleza</button>` : "<br>Tente outra palavra ou tire algum filtro."}</li>`;
+      ? `<li>${vazioHtml(`Não tem na nossa base. Procurando “${esc(estado.q)}” em toda Fortaleza…`)}</li>`
+      : `<li>${vazioHtml("Nada por aqui ainda. Bora tentar outra palavra?", estado.q.trim().length >= 3 ? `<button class="btn" style="margin-top:12px" data-online>${icone("busca", 16)}Procurar “${esc(estado.q.trim())}” em toda Fortaleza</button>` : "")}</li>`;
   $("#anuncio").hidden = !CONFIG.anuncios.ativo;
 }
 
@@ -145,14 +161,14 @@ function renderRoteiro() {
     <div class="pronto"><b>${esc(r.nome)}</b><p>${esc(r.desc)} · ${r.ids.length} paradas · ${esc(r.tempo)}</p>
     <div class="linha"><button class="btn fino" data-usar-roteiro="${r.id}">${icone("mais", 16)}Usar este roteiro</button></div></div>`).join("");
   if (!lugares.length) {
-    alvo.innerHTML = `<p class="vazio">Seu roteiro está vazio.<br>Abra um lugar e toque em “Adicionar ao roteiro”, ou comece por um pronto:</p>${prontos}`;
+    alvo.innerHTML = vazioHtml("Seu roteiro está vazio. Abra um lugar e toque em “Adicionar ao roteiro”, ou comece por um pronto:") + prontos;
     return;
   }
   const { ordem, totalKm } = montarRoteiro(estado.origem, lugares);
   alvo.innerHTML = `
     <p style="color:var(--mut);margin:12px 0">Melhor ordem de visita: <b style="color:var(--ink)">${formatarDistancia(totalKm)}</b> em linha reta${estado.origem ? ", saindo de você" : ""}.</p>
     <ul class="cards">${ordem.map((p, i) => cardHtml(p, `<span>Parada ${i + 1}</span>`)).join("")}</ul>
-    <div class="linha" style="margin-top:12px">
+    <div class="linha" style="margin-top:14px">
       <button class="btn pri" data-desenhar>${icone("rota", 18)}Ver no mapa</button>
       <button class="btn" data-guia>${icone(estado.guia ? "parar" : "som", 18)}${estado.guia ? "Desligar guia" : "Guia ao vivo"}</button>
     </div>
@@ -161,6 +177,40 @@ function renderRoteiro() {
       <button class="btn" data-limpar-roteiro>Limpar</button>
     </div>${prontos}`;
   alvo._ordem = ordem; alvo._total = totalKm;
+}
+
+/* ---------- passaporte: carimbo por lugar visitado, selos por conquista ---------- */
+function carimboSvg(p) {
+  const ts = estado.passaporte[p.id];
+  const data = ts ? new Date(ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "America/Fortaleza" }) : "";
+  return `<svg class="carimbo ${ts ? "on" : "off"}" style="--c:${corDe(p)};transform:rotate(${ts ? anguloCarimbo(p.id) : 0}deg)" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3" ${ts ? "" : 'stroke-dasharray="5 4"'}/>
+    <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.5 3"/>
+    <svg x="32" y="19" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconePaths(catDe(p))}</svg>
+    <text x="50" y="68" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="700" font-size="7.2" fill="currentColor">${esc(nomeCurto(p.nome))}</text>
+    ${data ? `<text x="50" y="79" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-weight="600" font-size="7" fill="currentColor">${data}</text>` : ""}
+  </svg>`;
+}
+
+function renderPassaporte() {
+  const r = resumoPassaporte(estado.passaporte, DADOS);
+  $("#n-passaporte").textContent = r.feitos ? `${r.feitos}` : "";
+  const pct = r.total ? Math.round((r.feitos / r.total) * 100) : 0;
+  const cats = Object.entries(CATEGORIAS).filter(([id]) => r.porCategoria[id]).map(([id, c]) => {
+    const x = r.porCategoria[id];
+    return `<div style="--c:${c.cor}"><span>${esc(c.nome)}</span><div class="barra"><i style="width:${Math.round((x.feitos / x.total) * 100)}%"></i></div><span>${x.feitos}/${x.total}</span></div>`;
+  }).join("");
+  $("#aba-passaporte").innerHTML = `
+    <div class="pass-topo">
+      <div class="resumo">${r.feitos} <small>de ${r.total} lugares carimbados</small></div>
+      <div class="barra"><i style="width:${pct}%"></i></div>
+      <p style="margin:0;color:var(--mut);font-size:13px">Abra um lugar e toque em “Já fui aqui”. O passaporte fica só no seu aparelho.</p>
+    </div>
+    <div class="cat-progresso">${cats}</div>
+    <h4 class="sec">Selos</h4>
+    <div class="selos">${r.selos.map((x) => `<div class="selo ${x.conquistado ? "on" : ""}"><b>${esc(x.nome)}</b><small>${esc(x.desc)}</small></div>`).join("")}</div>
+    <h4 class="sec">Carimbos</h4>
+    <div class="carimbos">${DADOS.map((p) => `<button data-id="${esc(p.id)}" aria-label="${esc(p.nome)}, ${estado.passaporte[p.id] ? "carimbado" : "ainda não visitado"}">${carimboSvg(p)}</button>`).join("")}</div>`;
 }
 
 function renderRelatos() {
@@ -179,12 +229,12 @@ function renderRelatos() {
         <small>há ${minAtras(r.ts)} min · ${r.votos} confirmações</small>
         <div class="linha"><button class="btn fino" data-voto="${r.id}">Ainda está assim</button><button class="btn fino" data-ver="${r.id}">Ver no mapa</button><button class="btn fino" data-del="${r.id}">Apagar</button></div>
       </div>`).join("")
-    : `<p class="vazio">Nenhum aviso agora.<br>Viu fila, interdição ou evento? Toque no botão laranja do mapa e avise. Os avisos somem em 6 horas.</p>`;
+    : vazioHtml("Nenhum aviso agora. Viu fila, interdição ou evento? Toque no botão laranja do mapa e avise. Os avisos somem em 6 horas.");
 }
 
 /* ---------- folha: detalhe, rota e relato (um painel só, sem pop-up) ---------- */
 const folha = $("#folha");
-function abrirFolha(html) { folha.innerHTML = html; folha.hidden = false; folha.scrollTop = 0; }
+function abrirFolha(html, hero = "") { folha.innerHTML = `${hero}<div class="corpo">${html}</div>`; folha.hidden = false; folha.scrollTop = 0; }
 function fecharFolha() {
   folha.hidden = true; camadaRota.clearLayers(); fala?.cancel();
   if (estado._forcada) { estado._forcada = false; definirGaveta(estado.gavetaAntes); }
@@ -236,11 +286,48 @@ function alternarGuia() {
   renderRoteiro();
 }
 
-/* luz boa para foto (nascer e pôr do sol), só para lugares fotogênicos */
+/* luz boa para foto e pôr do sol, só para lugares fotogênicos */
 function luzHtml(p) {
-  if (!(p.tags ?? []).some((t) => ["foto", "por do sol", "mirante", "nascer do sol"].includes(norm(t)))) return "";
-  const l = luzDourada(new Date(), p.lat, p.lon);
-  return `<div class="dica"><small>Luz boa pra foto hoje</small>${hhmm(l.manha[0])} às ${hhmm(l.manha[1])} e ${hhmm(l.tarde[0])} às ${hhmm(l.tarde[1])}</div>`;
+  const tags = (p.tags ?? []).map(norm);
+  if (!tags.some((t) => ["foto", "por do sol", "mirante", "nascer do sol"].includes(t))) return "";
+  const agora = new Date();
+  const l = luzDourada(agora, p.lat, p.lon);
+  const por = tags.includes("por do sol") ? `<br>Pôr do sol hoje às ${hhmm(horasDoSol(agora, p.lat, p.lon).por)}` : "";
+  return `<div class="dica"><small>Luz boa pra foto hoje</small>${hhmm(l.manha[0])} às ${hhmm(l.manha[1])} e ${hhmm(l.tarde[0])} às ${hhmm(l.tarde[1])}${por}</div>`;
+}
+
+/* condições do dia no local (mar, UV, vento): Open-Meteo, em cache por 15 min */
+const condCache = new Map();
+async function carregarCondicoes(p) {
+  const praia = p.categoria === "praia";
+  if (!praia && p.categoria !== "natureza") return;
+  const chave = `${p.lat.toFixed(2)},${p.lon.toFixed(2)}`;
+  let d = condCache.get(chave);
+  if (!d || Date.now() - d.t > 15 * 60000) {
+    const pega = (u) => fetch(u).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const [clima, mar] = await Promise.all([
+      pega(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=uv_index,wind_speed_10m&timezone=America%2FFortaleza`),
+      praia ? pega(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&current=wave_height,wave_period,sea_surface_temperature&timezone=America%2FFortaleza`) : null,
+    ]);
+    d = { t: Date.now(), c: lerCondicoes(clima?.current, mar?.current) };
+    condCache.set(chave, d);
+  }
+  const alvo = $("#condicoes");
+  if (!alvo || folha.dataset.id !== p.id) return;
+  const linhas = linhasCondicoes(d.c);
+  if (!linhas.length) return;
+  const dicas = conselhos(d.c, { praia, kite: (p.tags ?? []).map(norm).includes("kitesurf") });
+  alvo.innerHTML = `<div class="cond"><div class="cond-titulo">Agora no local</div>
+    <div class="cond-grade">${linhas.map((l) => `<div><b>${esc(l.valor)}</b><span>${esc(l.rotulo)}${l.nivel ? ` · ${esc(l.nivel)}` : ""}</span></div>`).join("")}</div>
+    ${dicas.length ? `<div class="cond-dicas">${dicas.map(esc).join(" ")}</div>` : ""}</div>`;
+}
+
+/** Centraliza o lugar na parte do mapa que NÃO está coberta pela folha (embaixo no celular, à esquerda no PC). */
+function centralizarForaDaFolha(p) {
+  const zoom = Math.max(mapa.getZoom(), 14);
+  mapa.setView([p.lat, p.lon], zoom, { animate: false });
+  if (celular()) mapa.panBy([0, Math.min(folha.offsetHeight, innerHeight * 0.66) / 2], { animate: false });
+  else mapa.panBy([-(folha.offsetWidth + 12) / 2, 0], { animate: false });
 }
 
 function abrirDetalhe(id, { mover = true } = {}) {
@@ -249,34 +336,48 @@ function abrirDetalhe(id, { mover = true } = {}) {
   if (celular() && estado.gaveta !== "min") { estado.gavetaAntes = estado.gaveta; estado._forcada = true; definirGaveta("min"); }
   camadaRota.clearLayers();
   estado.selecionado = id;
-  if (mover) mapa.panTo([p.lat, p.lon]);
   const dist = estado.origem ? haversine(estado.origem, p) : null;
   const avisos = estado.relatos.filter((r) => haversine(r, p) < 0.25);
   const noRoteiro = estado.roteiro.includes(id);
   const fav = estado.favoritos.has(id);
-  abrirFolha(`${topoFolha(p.nome)}
-    <div class="meta" style="margin-top:-4px"><span>${esc(CATEGORIAS[catDe(p)].nome)}</span>${p.bairro ? `<span>${esc(p.bairro)}</span>` : ""}${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${dist != null ? `<span>${formatarDistancia(dist)}</span>` : ""}</div>
+  const foto = FOTOS[id];
+  const c = CATEGORIAS[catDe(p)];
+  const fechar = `<button class="x" data-fechar aria-label="Fechar">${icone("fechar", 18)}</button>`;
+  const hero = foto
+    ? `<div class="hero"><img src="${esc(foto.src)}" alt="Foto: ${esc(p.nome)}" decoding="async"><a class="credito" href="${esc(foto.pagina)}" target="_blank" rel="noopener">Foto: Wikipédia</a>${fechar}</div>`
+    : "";
+  const jaFui = !!estado.passaporte[id];
+  abrirFolha(`
+    <div class="titulo"><span class="cat" style="--c:${c.cor}">${esc(c.nome)}${p.bairro ? ` · ${esc(p.bairro)}` : ""}</span>
+      <div class="folha-topo"><h2>${esc(p.nome)}</h2>${foto ? "" : fechar}</div></div>
+    <div class="meta" style="margin-top:-6px">${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${dist != null ? `<span>${formatarDistancia(dist)} de você</span>` : ""}</div>
     <p>${esc(p.descricao || "Sem descrição ainda. Dado do OpenStreetMap.")}</p>
     ${p.horario ? `<p class="meta" style="margin-top:-6px">${esc(horarioTexto(p.horario))}. Confirme no local.</p>` : ""}
     ${p.dica ? `<div class="dica"><small>Dica local</small>${esc(p.dica)}</div>` : ""}
+    <div id="condicoes"></div>
     ${luzHtml(p)}
     ${avisos.length ? `<div class="dica"><small>Avisos aqui perto</small>${avisos.map((r) => esc(r.texto || TIPOS_RELATO[r.tipo].nome)).join("<br>")}</div>` : ""}
     <div class="modos">
       <button data-rota="car">${icone("carro", 18)}Carro</button>
-      <button data-rota="foot">${icone("pe", 18)}A pé</button>
       <button data-rota="bike">${icone("bike", 18)}Bike</button>
+      <button data-rota="foot">${icone("pe", 18)}A pé</button>
     </div>
     <div class="linha">
       <button class="btn pri" data-roteiro="${esc(id)}">${icone(noRoteiro ? "fechar" : "mais", 18)}${noRoteiro ? "Tirar do roteiro" : "Adicionar ao roteiro"}</button>
       <button class="btn" data-fav="${esc(id)}" aria-pressed="${fav}">${icone("coracao", 18, fav)}${fav ? "Salvo" : "Salvar"}</button>
     </div>
     <div class="linha">
+      ${p._osm ? "" : `<button class="btn carimbar" data-carimbar aria-pressed="${jaFui}">${icone("carimbo", 18)}${jaFui ? "Carimbado" : "Já fui aqui"}</button>`}
       <button class="btn fino" data-ouvir>${ouvirHtml(false)}</button>
+      <button class="btn fino" data-compartilhar>${icone("compartilhar", 14)}Compartilhar</button>
+    </div>
+    <div class="linha">
       <a class="btn fino" target="_blank" rel="noopener" href="https://waze.com/ul?ll=${p.lat},${p.lon}&navigate=yes">Waze ${icone("externo", 14)}</a>
       <a class="btn fino" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}">Google Maps ${icone("externo", 14)}</a>
-      <button class="btn fino" data-compartilhar>${icone("compartilhar", 14)}Compartilhar</button>
-    </div>`);
+    </div>`, hero);
   folha.dataset.id = id; folha.dataset.modo = "detalhe";
+  if (mover) centralizarForaDaFolha(p);
+  carregarCondicoes(p);
   render();
 }
 
@@ -292,6 +393,14 @@ folha.addEventListener("click", async (e) => {
     i >= 0 ? estado.roteiro.splice(i, 1) : estado.roteiro.push(id);
     guardar("fx_roteiro", estado.roteiro);
     toast(i >= 0 ? "Tirado do roteiro" : "Adicionado ao roteiro");
+    return abrirDetalhe(id, { mover: false });
+  }
+  if (t.hasAttribute("data-carimbar")) {
+    const antes = resumoPassaporte(estado.passaporte, DADOS);
+    if (estado.passaporte[id]) delete estado.passaporte[id]; else estado.passaporte[id] = Date.now();
+    guardar("fx_passaporte", estado.passaporte);
+    const novos = selosNovos(antes, resumoPassaporte(estado.passaporte, DADOS));
+    toast(!estado.passaporte[id] ? "Carimbo removido" : novos.length ? `Carimbado! Novo selo: ${novos[0].nome}` : "Carimbado no seu passaporte", novos.length ? 4500 : 2600);
     return abrirDetalhe(id, { mover: false });
   }
   if (t.hasAttribute("data-ouvir")) {
@@ -324,33 +433,62 @@ const textoPasso = (s) => {
   const lado = m.type === "arrive" ? "" : m.modifier ? ` ${LADO[m.modifier] ?? ""}` : "";
   return `${MANOBRA[m.type] ?? "Siga"}${lado}${s.name ? ` na ${esc(s.name)}` : ""} (${formatarDistancia(s.distance / 1000)})`;
 };
-const modosHtml = (modo) => `<div class="modos">${[["car", "carro", "Carro"], ["foot", "pe", "A pé"], ["bike", "bike", "Bike"]].map(([k, ic, n]) => `<button data-rota="${k}" aria-pressed="${k === modo}">${icone(ic, 18)}${n}</button>`).join("")}</div>`;
+const modosComTempo = (modo, rotas) => `<div class="modos">${[["car", "carro", "Carro"], ["bike", "bike", "Bike"], ["foot", "pe", "A pé"]].map(([k, ic, n]) =>
+  `<button data-rota="${k}" aria-pressed="${k === modo}">${icone(ic, 18)}${n}${rotas?.[k] ? `<small>${formatarDuracao(rotas[k].duration)}</small>` : ""}</button>`).join("")}</div>`;
 
+async function buscarRota(modo, de, p) {
+  const r = await fetch(`https://routing.openstreetmap.de/${PERFIS[modo]}/route/v1/driving/${de.lon},${de.lat};${p.lon},${p.lat}?overview=full&geometries=geojson&steps=true`);
+  if (!r.ok) throw new Error(r.status);
+  const rota = (await r.json()).routes?.[0];
+  if (!rota) throw new Error("sem rota");
+  return rota;
+}
+
+/** Para lugares de pôr do sol: a que horas sair para chegar a tempo (usa a duração da rota). */
+function saiaAte(p, duracaoSeg) {
+  if (!(p.tags ?? []).map(norm).includes("por do sol")) return "";
+  const agora = Date.now();
+  const { por } = horasDoSol(new Date(), p.lat, p.lon);
+  if (+por <= agora) return "";
+  const chegada = new Date(agora + duracaoSeg * 1000);
+  const sair = new Date(+por - 15 * 60000 - duracaoSeg * 1000);
+  const texto = chegada > por ? `Hoje o pôr do sol é às ${hhmm(por)}. Saindo agora você chega depois dele.`
+    : sair.getTime() <= agora ? `Saindo agora você chega às ${hhmm(chegada)}, antes do pôr do sol (${hhmm(por)}).`
+    : `Saia até ${hhmm(sair)} para chegar com 15 min de folga antes do pôr do sol (${hhmm(por)}).`;
+  return `<div class="dica"><small>Pôr do sol</small>${texto}</div>`;
+}
+
+const rotaCache = new Map();
+let seqRota = 0;
 async function tracarRota(id, modo = "car") {
   const p = porId(id);
   const de = estado.origem ?? CENTRO;
+  const eu = ++seqRota;
   camadaRota.clearLayers();
-  const cabeca = `${topoFolha(p.nome, true)}${modosHtml(modo)}`;
-  abrirFolha(`${cabeca}<p class="vazio">Calculando rota ${MODO_NOME[modo]}…</p>`);
-  folha.dataset.modo = "rota";
+  const topo = topoFolha(p.nome, true);
+  const chave = `${id}|${de.lat.toFixed(4)},${de.lon.toFixed(4)}`;
+  // as três rotas (carro, bike, a pé) são pedidas juntas para comparar os tempos lado a lado
+  if (!rotaCache.has(chave)) rotaCache.set(chave, Promise.allSettled(["car", "bike", "foot"].map((m) => buscarRota(m, de, p))).then((rs) => ({ car: rs[0].value, bike: rs[1].value, foot: rs[2].value })));
+  folha.dataset.modo = "rota"; folha.dataset.id = id;
+  abrirFolha(`${topo}${modosComTempo(modo, null)}${vazioHtml("Calculando as rotas…")}`);
+  const rotas = await rotaCache.get(chave);
+  if (eu !== seqRota || folha.dataset.id !== id || folha.dataset.modo !== "rota") return;
+  if (!rotas.car && !rotas.bike && !rotas.foot) rotaCache.delete(chave); // falhou tudo: permite tentar de novo
   const semOrigem = estado.origem ? "" : `<p class="dica"><small>Sem localização</small>Rota saindo do Centro. Toque no botão de alvo no mapa para usar a sua posição.</p>`;
-  try {
-    const r = await fetch(`https://routing.openstreetmap.de/${PERFIS[modo]}/route/v1/driving/${de.lon},${de.lat};${p.lon},${p.lat}?overview=full&geometries=geojson&steps=true`);
-    if (!r.ok) throw new Error(r.status);
-    const rota = (await r.json()).routes?.[0];
-    if (!rota) throw new Error("sem rota");
-    if (folha.dataset.id !== id) return;
+  const rota = rotas[modo];
+  if (rota) {
     const linha = L.geoJSON(rota.geometry, { style: { color: "#0b6e72", weight: 6, opacity: 0.9 } }).addTo(camadaRota);
     mapa.fitBounds(linha.getBounds(), { padding: [60, 60] });
-    abrirFolha(`${cabeca}${semOrigem}
+    abrirFolha(`${topo}${modosComTempo(modo, rotas)}${semOrigem}
       <div class="resumo">${formatarDuracao(rota.duration)} <small>· ${formatarDistancia(rota.distance / 1000)} ${MODO_NOME[modo]}</small></div>
-      <details><summary>Passo a passo</summary><ol>${rota.legs[0].steps.map((s) => `<li>${textoPasso(s)}</li>`).join("")}</ol></details>`);
-  } catch {
+      ${saiaAte(p, rotas.car?.duration ?? rota.duration)}
+      <details><summary>Passo a passo</summary><ol>${rota.legs[0].steps.map((x) => `<li>${textoPasso(x)}</li>`).join("")}</ol></details>`);
+  } else {
     const km = haversine(de, p);
     const vel = { car: 25, foot: 4.5, bike: 14 }[modo];
     L.polyline([[de.lat, de.lon], [p.lat, p.lon]], { color: "#0b6e72", dashArray: "6 8", weight: 4 }).addTo(camadaRota);
     mapa.fitBounds([[de.lat, de.lon], [p.lat, p.lon]], { padding: [60, 60] });
-    abrirFolha(`${cabeca}${semOrigem}
+    abrirFolha(`${topo}${modosComTempo(modo, rotas)}${semOrigem}
       <div class="resumo">${formatarDistancia(km)} <small>em linha reta · ~${formatarDuracao((km / vel) * 3600)} ${MODO_NOME[modo]}</small></div>
       <p class="dica"><small>Sem internet?</small>O serviço de rotas não respondeu. Mostrei a linha reta.</p>`);
   }
@@ -497,7 +635,7 @@ async function buscarNaArea() {
   btn.textContent = "Buscar nesta área"; btn.disabled = false; btn.hidden = true;
 }
 // O botão só aparece quando faz sentido: mapa aproximado e movido pelo usuário.
-mapa.on("moveend", () => { $("#btn-aqui").hidden = mapa.getZoom() < 14 || estado.modoRelato || !folha.hidden && folha.dataset.modo === "rota"; });
+mapa.on("moveend", () => { $("#btn-aqui").hidden = mapa.getZoom() < 14 || estado.modoRelato || !folha.hidden; });
 
 /* ---------- avisos da comunidade (relatos) ---------- */
 const salvarRelatos = () => guardar("fx_relatos", estado.relatos);
@@ -610,9 +748,10 @@ function aoClicarCards(e) {
   const fav = e.target.closest("[data-fav]");
   if (fav) { e.stopPropagation(); alternarFavorito(fav.dataset.fav); return render(); }
   if (e.target.closest("[data-mais]")) { estado.limite += POR_PAGINA; return renderLista(); }
-  const card = e.target.closest(".card"); if (card) abrirDetalhe(card.dataset.id);
+  const card = e.target.closest(".item"); if (card) abrirDetalhe(card.dataset.id);
 }
 $("#aba-lista").addEventListener("click", aoClicarCards);
+$("#aba-passaporte").addEventListener("click", (e) => { const b = e.target.closest("button[data-id]"); if (b) abrirDetalhe(b.dataset.id); });
 $("#aba-roteiro").addEventListener("click", async (e) => {
   const el = $("#aba-roteiro");
   const usar = e.target.closest("[data-usar-roteiro]");
@@ -641,11 +780,11 @@ $("#aba-roteiro").addEventListener("click", async (e) => {
   if (e.target.closest("[data-guia]")) return alternarGuia();
   aoClicarCards(e);
 });
-$("#aba-lista").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.classList.contains("card")) abrirDetalhe(e.target.dataset.id); });
+$("#aba-lista").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.classList.contains("item")) abrirDetalhe(e.target.dataset.id); });
 
 document.querySelectorAll(".abas [data-aba]").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll(".abas [data-aba]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
-  for (const a of ["lista", "roteiro", "relatos"]) $(`#aba-${a}`).hidden = a !== b.dataset.aba;
+  for (const a of ["lista", "roteiro", "passaporte", "relatos"]) $(`#aba-${a}`).hidden = a !== b.dataset.aba;
   $(".conteudo").scrollTop = 0;
   if (celular() && estado.gaveta === "min") definirGaveta("meio");
 }));
@@ -747,7 +886,7 @@ $("#btn-painel").innerHTML = icone("lista", 20);
 $("#ic-busca").innerHTML = icone("busca", 18);
 $("#btn-local").innerHTML = icone("local", 22);
 $("#btn-relato").innerHTML = icone("relatar", 22);
-$("#btn-surpresa").innerHTML = `${icone("dado", 16)}Me surpreenda`;
+$("#btn-surpresa").innerHTML = `${icone("dado", 16)}Sorteie um lugar`;
 
 /* link compartilhado: #lugar=id */
 function abrirDoHash() {

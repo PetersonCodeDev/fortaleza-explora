@@ -45,6 +45,10 @@ npm test
 | Busca por voz | Microfone na barra de busca (Chrome/Edge/Android, precisa de https) |
 | Cartão pra Stories | O roteiro vira uma imagem 1080x1920 para compartilhar |
 | Luz boa pra foto | Janelas de luz dourada de hoje nos lugares fotogênicos |
+| Fotos reais | 19 lugares com foto da Wikipédia (conferidas uma a uma, com crédito) |
+| Passaporte | "Já fui aqui" carimba o lugar; barras por categoria e 10 selos de conquista |
+| Rotas comparadas | Carro, bike e a pé lado a lado, e "saia até…" para chegar ao pôr do sol |
+| Condições no local | Mar (ondas, água), UV e vento nas praias e parques, com conselho prático |
 | Lista recolhível | Gaveta de 3 posições no celular e botão para esconder a lista no PC |
 | Páginas para o Google | `npm run paginas` gera uma página por lugar + sitemap (feito sozinho no deploy) |
 
@@ -54,7 +58,10 @@ npm test
 index.html            página única
 css/style.css         estilo responsivo (mobile first, tema claro/escuro)
 js/search.js          motor de busca, Haversine, Levenshtein, roteiro (sem DOM, testado)
-js/data.js            base curada de 34 lugares + categorias
+js/data.js            base curada de 34 lugares + categorias + roteiros
+js/fotos.js           fotos (gerado por ferramentas/gerar-fotos.mjs)
+js/condicoes.js       UV, vento, ondas em linguagem simples
+js/passaporte.js      carimbos e selos
 js/app.js             interface, mapa, rotas, relatos
 sw.js, manifest.*     PWA
 tests/                testes automáticos (node:test)

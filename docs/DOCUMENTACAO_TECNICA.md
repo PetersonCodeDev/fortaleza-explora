@@ -10,7 +10,7 @@
 
 Fortaleza Explora é um **aplicativo web progressivo (PWA)** que responde "o que faço agora em Fortaleza?". Ele junta **busca inteligente** (tolera erro de digitação, entende intenção e procura no mapa aberto do mundo quando a base local não tem), **mapa e rotas**, **sugestões pela hora, pôr do sol e chuva**, **avisos da comunidade com validade** (ideia do Waze), **roteiro com ordem de visita calculada por algoritmo** e **guia por voz**. É feito **sem framework e sem servidor próprio**: HTML, CSS e JavaScript puros, consumindo APIs abertas, hospedado de graça.
 
-Números: ~2.300 linhas de código próprio, 32 lugares conferidos (27 com foto real e crédito), 6 roteiros prontos, 8 categorias, 27 testes automatizados, ~120 KB de JavaScript próprio.
+Números: ~2.700 linhas de código (com testes e ferramentas), 32 lugares conferidos (27 com foto real e crédito), 6 roteiros prontos, 8 categorias, 27 testes automatizados, 112 KB de JavaScript próprio.
 
 ---
 
@@ -191,7 +191,7 @@ Estado = objeto `{idDoLugar: instante}` no `localStorage`. `resumoPassaporte()` 
 
 ## 10. Desempenho
 
-- Sem framework e sem build: ~100 KB de JavaScript próprio.
+- Sem framework e sem build: 112 KB de JavaScript próprio.
 - **Marcadores atualizados por diferença** (só adiciona/remove o que mudou, sem redesenhar todos).
 - Lista paginada (40 por vez) e `content-visibility: auto` nos cards.
 - *Debounce* na digitação; consultas online em paralelo e com cache por termo.

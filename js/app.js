@@ -245,14 +245,31 @@ const topoFolha = (titulo, voltar) => `<div class="folha-topo">${voltar ? `<butt
 /* ---------- voz: narração do lugar e guia ao vivo ---------- */
 const fala = window.speechSynthesis;
 const textoNarracao = (p) => `${p.nome}. ${p.descricao || ""} ${p.dica ? `Dica local: ${p.dica}` : ""}`;
+/* o leitor do navegador lê mal siglas e símbolos: troco por como se fala */
+const paraFala = (t) => t
+  .replace(/R\$\s?(\d+)/g, "$1 reais").replace(/(\d)\s?km\b/gi, "$1 quilômetros").replace(/(\d)\s?m\b/g, "$1 metros")
+  .replace(/\bAv\.\s/g, "Avenida ").replace(/\bR\.\s/g, "Rua ").replace(/\bPç\.\s/g, "Praça ").replace(/\bN\.\s?S\.\s/g, "Nossa Senhora ")
+  .replace(/[★☆•·→]/g, ",").replace(/\s+/g, " ").trim();
+/* melhor voz em português: prefere pt-BR e vozes naturais (Google, Microsoft Online) */
+function escolherVoz() {
+  const vozes = (fala?.getVoices() ?? []).filter((v) => /^pt[-_]/i.test(v.lang ?? ""));
+  const pontos = (v) => (/^pt[-_]br/i.test(v.lang) ? 10 : 0) + (/natural|online|google|neural/i.test(v.name) ? 5 : 0) + (v.localService ? 0 : 1);
+  return vozes.sort((a, b) => pontos(b) - pontos(a))[0];
+}
+fala?.getVoices(); // o Chrome só começa a carregar as vozes depois da primeira chamada
 function falar(texto) {
   if (!fala) { toast("Este navegador não sabe falar."); return null; }
   fala.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.lang = "pt-BR"; u.rate = 0.98;
-  const voz = fala.getVoices().find((v) => v.lang?.toLowerCase().replace("_", "-") === "pt-br");
-  if (voz) u.voice = voz;
-  fala.speak(u);
+  const voz = escolherVoz();
+  // frases separadas: o Chrome corta falas longas no meio e a pausa entre frases soa mais natural
+  const frases = paraFala(texto).match(/[^.!?]+[.!?]*/g)?.map((s) => s.trim()).filter(Boolean) ?? [];
+  let u = null;
+  for (const f of frases) {
+    u = new SpeechSynthesisUtterance(f);
+    u.lang = "pt-BR"; u.rate = 0.95; u.pitch = 1;
+    if (voz) u.voice = voz;
+    fala.speak(u);
+  }
   return u;
 }
 const ouvirHtml = (falando) => `${icone(falando ? "parar" : "som", 14)}${falando ? "Parar" : "Ouvir"}`;

@@ -54,3 +54,11 @@ test("dados: ids únicos e coordenadas dentro da Grande Fortaleza", () => {
   for (const p of DADOS) assert.ok(p.lat < -3.5 && p.lat > -4.0 && p.lon < -38.3 && p.lon > -38.8, p.id);
 });
 test("formatarDistancia", () => { assert.equal(formatarDistancia(0.45), "450 m"); assert.equal(formatarDistancia(2.34), "2,3 km"); });
+
+test("sinônimos novos: almoço, chuva, romântico e lembrança acham lugares da base", async () => {
+  const { DADOS } = await import("../js/data.js");
+  const { buscar } = await import("../js/search.js");
+  for (const q of ["almoço", "jantar", "chuva", "romântico", "lembrança", "caminhar", "cinema", "esporte", "aventura"]) {
+    assert.ok(buscar(DADOS, { q }).length > 0, `"${q}" não achou nada`);
+  }
+});

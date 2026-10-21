@@ -57,11 +57,11 @@ Como a maioria vai usar no celular, eu pensei nele primeiro. É um PWA, ou seja,
 
 ## 14. Como garanti que os dados são confiáveis
 
-Num app de turismo, um pin no lugar errado é o erro mais visível. Por isso eu conferi cada posição com duas fontes, o OpenStreetMap e a Wikipédia. Meus números iniciais erravam até 1,6 km, como no Farol do Mucuripe, e eu corrigi todos. As 27 fotos têm licença livre e mostram o autor. Teve um caso curioso: a Wikipédia apontava um forte em Portugal no lugar da Fortaleza de Nossa Senhora da Assunção, e eu só percebi porque comparei as coordenadas. O que eu não consegui confirmar, tirei do app. Também tenho 27 testes automáticos que rodam a cada publicação. Os horários de funcionamento ainda são estimados, e o app avisa isso.
+Num app de turismo, um pin no lugar errado é o erro mais visível. Por isso eu conferi cada posição com duas fontes, o OpenStreetMap e a Wikipédia. Meus números iniciais erravam até 1,6 km, como no Farol do Mucuripe, e eu corrigi todos. As 27 fotos têm licença livre e mostram o autor. Teve um caso curioso: a Wikipédia apontava um forte em Portugal no lugar da Fortaleza de Nossa Senhora da Assunção, e eu só percebi porque comparei as coordenadas. O que eu não consegui confirmar, tirei do app. Também tenho 28 testes automáticos que rodam a cada publicação. Os horários de funcionamento ainda são estimados, e o app avisa isso.
 
 ## 15. No ar, de graça e de forma automática
 
-Para publicar eu uso o GitHub Pages, que é gratuito. Funciona assim: eu envio o código para o GitHub, ele roda os 27 testes e, se tudo passar, publica o site com https, que é necessário para o GPS e para instalar o app. Se algum teste falhar, a versão antiga continua no ar. O endereço está na tela e o código é aberto. Quem quiser pode abrir no celular agora.
+Para publicar eu uso o GitHub Pages, que é gratuito. Funciona assim: eu envio o código para o GitHub, ele roda os 28 testes e, se tudo passar, publica o site com https, que é necessário para o GPS e para instalar o app. Se algum teste falhar, a versão antiga continua no ar. O endereço está na tela e o código é aberto. Quem quiser pode abrir no celular agora.
 
 ## 16. O que ainda falta, e eu sei disso
 

@@ -10,7 +10,7 @@
 
 Fortaleza Explora é um **aplicativo web progressivo (PWA)** que responde "o que faço agora em Fortaleza?". Ele junta **busca inteligente** (tolera erro de digitação, entende intenção e procura no mapa aberto do mundo quando a base local não tem), **mapa e rotas**, **sugestões pela hora, pôr do sol e chuva**, **avisos da comunidade com validade** (ideia do Waze), **roteiro com ordem de visita calculada por algoritmo** e **guia por voz**. É feito **sem framework e sem servidor próprio**: HTML, CSS e JavaScript puros, consumindo APIs abertas, hospedado de graça.
 
-Números: ~2.700 linhas de código (com testes e ferramentas), 32 lugares conferidos (27 com foto real e crédito), 6 roteiros prontos, 8 categorias, 27 testes automatizados, 112 KB de JavaScript próprio.
+Números: ~2.700 linhas de código (com testes e ferramentas), 32 lugares conferidos (27 com foto real e crédito), 6 roteiros prontos, 8 categorias, 28 testes automatizados, 112 KB de JavaScript próprio.
 
 ---
 
@@ -104,7 +104,7 @@ Aplicação **cliente (SPA)** em módulos ES, sem back-end. Tudo que é do usuá
 | Item | Uso |
 |---|---|
 | **GitHub Pages + GitHub Actions** | Hospedagem gratuita; a cada envio roda os testes, gera as páginas e publica |
-| **Node.js `node:test`** | 27 testes automatizados, sem dependências |
+| **Node.js `node:test`** | 28 testes automatizados, sem dependências |
 | **browser-sync** (só em desenvolvimento) | Recarrega o celular sozinho quando o código muda |
 | **Schema.org JSON-LD** | Dados estruturados em cada página de lugar (SEO) |
 
@@ -201,7 +201,7 @@ Estado = objeto `{idDoLugar: instante}` no `localStorage`. `resumoPassaporte()` 
 
 ## 11. Qualidade: testes
 
-`npm test` roda **27 testes** (`node:test`) cobrindo: normalização, Haversine, Levenshtein, busca (acento, erro de digitação, sinônimos, AND), filtros, raio e ordenação, horário (24 h, dias, **virada de meia-noite**), roteiro (2-opt nunca pior), sugestões, integridade dos dados, **pôr/nascer do sol em todos os meses**, períodos do dia, chuva, luz dourada e validade dos roteiros prontos.
+`npm test` roda **28 testes** (`node:test`) cobrindo: normalização, Haversine, Levenshtein, busca (acento, erro de digitação, sinônimos, AND), filtros, raio e ordenação, horário (24 h, dias, **virada de meia-noite**), roteiro (2-opt nunca pior), sugestões, integridade dos dados, **pôr/nascer do sol em todos os meses**, períodos do dia, chuva, luz dourada e validade dos roteiros prontos.
 
 Os testes cobrem também níveis de UV/vento/onda, conselhos, selos do passaporte, ângulo e nome curto do carimbo. Eles usam instantes explícitos em UTC-3, então **passam igual em qualquer fuso** (conferido com `TZ=UTC`, que é o do servidor do GitHub). O GitHub Actions roda os testes antes de cada publicação: se um falhar, a versão antiga continua no ar.
 
@@ -262,7 +262,7 @@ Teste tudo uma vez antes, com internet. Se a rede da sala for ruim, mostre prime
 7. **Passaporte:** toque em "Já fui aqui" em 2 ou 3 lugares → aba Passaporte → mostre os carimbos, as barras e o selo conquistado.
 8. **Avisos:** botão laranja do mapa → toque no mapa → publique "Lotado" → mostre que some em 6 h e que dá para confirmar.
 9. **Celular:** abra no celular, arraste a barra de baixo para minimizar e ver o mapa; mostre o tema escuro e "Instalar como aplicativo".
-10. **Código:** abra `js/search.js` e mostre `levenshtein()`, `score()` e `montarRoteiro()`; depois `npm test` com os 27 testes passando.
+10. **Código:** abra `js/search.js` e mostre `levenshtein()`, `score()` e `montarRoteiro()`; depois `npm test` com os 28 testes passando.
 
 **Plano B se a internet cair:** o app abre e a base local, a busca e o roteiro funcionam; só mapa novo, rotas, clima e busca online dependem da rede.
 
@@ -275,7 +275,7 @@ Teste tudo uma vez antes, com internet. Se a rede da sala for ruim, mostre prime
 - **"Como funciona o ranking?"** Pontuação por campo com pesos, expansão por sinônimos, tolerância a erro com Levenshtein e desempate por nota e distância (Haversine).
 - **"E se o servidor de rotas cair?"** Plano B: linha reta com estimativa de tempo, avisando o usuário.
 - **"Funciona offline?"** A base local, a interface e o cálculo do sol sim; mapa novo, rotas, clima e busca online precisam de internet.
-- **"Como garante que não quebra?"** 27 testes automáticos rodam a cada publicação.
+- **"Como garante que não quebra?"** 28 testes automáticos rodam a cada publicação.
 - **"Qual a complexidade do roteiro?"** Vizinho mais próximo O(n²) e 2-opt; heurística, não ótimo exato (o problema é NP-difícil).
 - **"E a privacidade?"** Nada é enviado a servidor próprio; localização só por ação do usuário; fontes e bibliotecas locais.
 

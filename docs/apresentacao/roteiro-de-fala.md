@@ -47,7 +47,7 @@ Aqui são duas funções. À esquerda, a rota: o app mostra carro, bike e a pé 
 
 Um app precisa de um motivo para a pessoa voltar. Do Swarm eu peguei o passaporte: em cada lugar a pessoa toca em “Já fui aqui” e ganha um carimbo com a data. O app mostra o progresso por categoria e dez selos, como o “Praieiro” para quem visita três praias. Isso fica só no aparelho dela. Já o cartão para Stories é uma imagem que o app desenha com o roteiro montado: título, mapa do caminho e a lista de paradas. É divulgação feita pelos próprios usuários.
 
-## 12. Como eu cuidei do visual
+## 12. O visual do app
 
 Eu queria que o app tivesse cara própria e não parecesse um modelo pronto. Escolhi cores tiradas da cidade: papel quente, verde do mar e laranja do sol. Usei três fontes, cada uma com uma função: uma para os títulos, uma bem legível para o texto e uma de letra à mão para as dicas. Coloquei fotos reais com crédito e desenhei uma jangada em estilo de xilogravura, que lembra o cordel do Ceará. E a lista tem linhas finas, como um índice de guia, em vez de cartões todos iguais.
 
@@ -67,9 +67,9 @@ Para publicar eu uso o GitHub Pages, que é gratuito. Funciona assim: eu envio o
 
 Quero ser sincero sobre os limites. Os horários são estimados, e o app avisa para confirmar no local. Os avisos da comunidade ficam só no aparelho de quem criou, porque eu não tenho servidor; esse é o primeiro próximo passo. Os serviços gratuitos às vezes demoram. Cinco lugares ficaram sem foto, porque não achei imagem livre adequada. E eu ainda quero testar em mais celulares. Nos próximos passos, quero ter o servidor, versões em inglês e espanhol e medir a qualidade da busca.
 
-## 17. Como eu trabalhei
+## 17. Como foi feito
 
-Para fechar, como foi o meu processo. Eu escolhi o tema, decidi o que entra no app e o que fica de fora, e defini cada função. Depois conferi os dados um por um, comparando com fontes abertas, e criei testes para não quebrar o que já funcionava. O que eu mais aprendi foi como funciona uma busca por dentro e como um app consegue funcionar sem servidor. Tudo é código aberto e os créditos estão dentro do app.
+Resumindo como o projeto foi montado. O mapa usa o Leaflet com os dados do OpenStreetMap, e as rotas vêm da API do OSRM. A busca é um código próprio, com pontuação por campo, sinônimos e tolerância a erro de digitação. Chuva, UV, vento e ondas vêm da API do Open-Meteo. Os 32 lugares foram conferidos com o OpenStreetMap e a Wikipédia, e as fotos são do Wikimedia Commons, só com licença livre. Para publicar, o GitHub roda os testes e coloca o site no ar. Aprendi bastante sobre como uma busca funciona por dentro e como um app roda sem servidor.
 
 ## 18. Obrigado!
 

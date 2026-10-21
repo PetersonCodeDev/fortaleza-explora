@@ -186,5 +186,101 @@ export const FOTOS = {
     "pagina": "https://commons.wikimedia.org/wiki/File:Entrada_do_Parque_Bot%C3%A2nico_de_Caucaia_no_Cear%C3%A1.jpg",
     "autor": "Anjosecc",
     "licenca": "CC BY-SA 4.0"
+  },
+  "mis": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/MIS-CE_-_Casa_de_Fausto_Cabral_15.jpg/960px-MIS-CE_-_Casa_de_Fausto_Cabral_15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:MIS-CE_-_Casa_de_Fausto_Cabral_15.jpg",
+    "autor": "GLandovsky",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "casa-alencar": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Casa_Jos%C3%A9_de_Alencar_%28by_Tom_Junior%29.jpg/960px-Casa_Jos%C3%A9_de_Alencar_%28by_Tom_Junior%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Casa_Jos%C3%A9_de_Alencar_(by_Tom_Junior).jpg",
+    "autor": "Tom Junior",
+    "licenca": "CC BY-SA 3.0"
+  },
+  "juvenal-galeno": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Casa_de_Juvenal_Galeno_01.jpg/960px-Casa_de_Juvenal_Galeno_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Casa_de_Juvenal_Galeno_01.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "sobrado-lourenco": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Sobrado_Dr._Jos%C3%A9_Louren%C3%A7o_-_Fortaleza_06.jpg/960px-Sobrado_Dr._Jos%C3%A9_Louren%C3%A7o_-_Fortaleza_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Sobrado_Dr._Jos%C3%A9_Louren%C3%A7o_-_Fortaleza_06.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "estacao-artes": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Esta%C3%A7%C3%A3o_das_Artes_Belchior_04.jpg/960px-Esta%C3%A7%C3%A3o_das_Artes_Belchior_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Esta%C3%A7%C3%A3o_das_Artes_Belchior_04.jpg",
+    "autor": "Ruan Moreira Peixoto",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "museu-humor": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/Museu_do_Humor_Cearense_01.jpg/960px-Museu_do_Humor_Cearense_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Museu_do_Humor_Cearense_01.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "museu-industria": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Museu_da_Ind%C3%BAstria_03.jpg/960px-Museu_da_Ind%C3%BAstria_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Museu_da_Ind%C3%BAstria_03.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "museu-fotografia": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Museu_da_Fotografia_Fortaleza_06.jpg/960px-Museu_da_Fotografia_Fortaleza_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Museu_da_Fotografia_Fortaleza_06.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "teatro-sao-jose": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Teatro_S%C3%A3o_Jos%C3%A9_em_Fortaleza_04.jpg/960px-Teatro_S%C3%A3o_Jos%C3%A9_em_Fortaleza_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Teatro_S%C3%A3o_Jos%C3%A9_em_Fortaleza_04.jpg",
+    "autor": "GLandovsky",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "teatro-carlos-camara": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Teatro_Carlos_C%C3%A2mara_01.jpg/960px-Teatro_Carlos_C%C3%A2mara_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Teatro_Carlos_C%C3%A2mara_01.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "teatro-chico-anysio": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Museu_do_Humor_%26_Teatro_Chico_Anysio.jpg/960px-Museu_do_Humor_%26_Teatro_Chico_Anysio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Museu_do_Humor_%26_Teatro_Chico_Anysio.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "biblioteca-estadual": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Fachada_BECE.jpg/960px-Fachada_BECE.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Fachada_BECE.jpg",
+    "autor": "Ruan Moreira Peixoto",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "santa-casa": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Santa_Casa_de_Miseric%C3%B3rdia_de_Fortaleza.png/960px-Santa_Casa_de_Miseric%C3%B3rdia_de_Fortaleza.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Santa_Casa_de_Miseric%C3%B3rdia_de_Fortaleza.png",
+    "autor": "Nakinn",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "liceu-ceara": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/43/Liceu_do_Cear%C3%A1_-_panoramio.jpg/960px-Liceu_do_Cear%C3%A1_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Liceu_do_Cear%C3%A1_-_panoramio.jpg",
+    "autor": "Claudio Oliveira Lim…",
+    "licenca": "CC BY-SA 3.0"
+  },
+  "cemiterio-sao-joao": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Saint_John_the_Baptist_cemetery_entrance_-_2007-11-02.jpg/960px-Saint_John_the_Baptist_cemetery_entrance_-_2007-11-02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Saint_John_the_Baptist_cemetery_entrance_-_2007-11-02.jpg",
+    "autor": "Claudio Oliveira Lim…",
+    "licenca": "CC BY-SA 3.0"
+  },
+  "escola-artes-oficios": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Escola_de_Artes_e_Of%C3%ADcios_Thomaz_Pompeu_Sobrinho_01.jpg/960px-Escola_de_Artes_e_Of%C3%ADcios_Thomaz_Pompeu_Sobrinho_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Escola_de_Artes_e_Of%C3%ADcios_Thomaz_Pompeu_Sobrinho_01.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
   }
 };

@@ -22,7 +22,12 @@ const DE_ARTIGO = { // título do artigo na Wikipédia em português
   "estoril": "Estoril (Fortaleza)", "coco": "Parque Estadual do Cocó", "sabiaguaba": "Parque Natural Municipal das Dunas de Sabiaguaba",
   "castelao": "Estádio Governador Plácido Castelo", "cumbuco": "Cumbuco", "lagoa-messejana": "Lagoa de Messejana",
   "palacio-luz": "Palácio da Luz", "palacio-abolicao": "Palácio da Abolição", "prainha-aquiraz": "Prainha (Aquiraz)",
-  "parque-botanico": "Parque Estadual Botânico do Ceará", "pinacoteca": "Pinacoteca do Ceará", "praia-mucuripe": "Praia do Mucuripe",
+  "parque-botanico": "Parque Estadual Botânico do Ceará",
+  "mis": "Museu da Imagem e do Som do Ceará", "casa-alencar": "Casa de José de Alencar", "juvenal-galeno": "Casa de Juvenal Galeno",
+  "sobrado-lourenco": "Sobrado Dr. José Lourenço", "estacao-artes": "Estação das Artes Belchior", "museu-humor": "Museu do Humor Cearense", "museu-industria": "Museu da Indústria",
+  "museu-fotografia": "Museu da Fotografia Fortaleza", "teatro-sao-jose": "Teatro São José", "teatro-carlos-camara": "Teatro Carlos Câmara", "teatro-chico-anysio": "Teatro Chico Anysio",
+  "biblioteca-estadual": "Biblioteca Pública Estadual do Ceará", "santa-casa": "Santa Casa de Misericórdia de Fortaleza",
+  "liceu-ceara": "Liceu do Ceará", "cemiterio-sao-joao": "Cemitério São João Batista (Fortaleza)", "escola-artes-oficios": "Escola de Artes e Ofícios Thomaz Pompeu Sobrinho", "pinacoteca": "Pinacoteca do Ceará", "praia-mucuripe": "Praia do Mucuripe",
 };
 const DE_COMMONS = { // arquivo do Commons
   "estatua-iracema": "File:Estátua de Iracema Guardiã 02.jpg",

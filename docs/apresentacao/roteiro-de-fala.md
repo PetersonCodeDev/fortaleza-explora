@@ -25,11 +25,11 @@ Este é o resultado. À esquerda, o mapa com um pin para cada lugar. À direita,
 
 ## 6. Três camadas, sem framework
 
-Eu escolhi não usar framework, só HTML, CSS e JavaScript. Fica leve e mais fácil de eu explicar. O app tem três camadas: a interface, que é o que se vê, com o Leaflet para o mapa; a lógica, que são arquivos separados que eu consigo testar sozinhos; e os dados, com 42 lugares que eu conferi e cinco serviços abertos. Como tudo roda no navegador, não precisei de servidor, e a hospedagem é gratuita.
+Eu escolhi não usar framework, só HTML, CSS e JavaScript. Fica leve e mais fácil de eu explicar. O app tem três camadas: a interface, que é o que se vê, com o Leaflet para o mapa; a lógica, que são arquivos separados que eu consigo testar sozinhos; e os dados, com 65 lugares que eu conferi e cinco serviços abertos. Como tudo roda no navegador, não precisei de servidor, e a hospedagem é gratuita.
 
 ## 7. De onde vem cada informação
 
-O mapa e as ruas vêm do OpenStreetMap, que é como a Wikipédia dos mapas. As rotas vêm do OSRM. Para achar lugares que não estão na minha base, uso o Overpass e o Nominatim, também do OpenStreetMap. Clima, UV, vento e mar vêm do Open-Meteo. As fotos vêm do Wikimedia Commons, só com licença livre, e o app mostra o autor de cada uma. E tem a minha base com 42 lugares. Nenhum desses serviços pede chave ou cadastro.
+O mapa e as ruas vêm do OpenStreetMap, que é como a Wikipédia dos mapas. As rotas vêm do OSRM. Para achar lugares que não estão na minha base, uso o Overpass e o Nominatim, também do OpenStreetMap. Clima, UV, vento e mar vêm do Open-Meteo. As fotos vêm do Wikimedia Commons, só com licença livre, e o app mostra o autor de cada uma. E tem a minha base com 65 lugares. Nenhum desses serviços pede chave ou cadastro.
 
 ## 8. Busca que tolera erros e vai além da base
 
@@ -57,7 +57,7 @@ Como a maioria vai usar no celular, eu pensei nele primeiro. É um PWA, ou seja,
 
 ## 14. Como garanti que os dados são confiáveis
 
-Num app de turismo, um pin no lugar errado é o erro mais visível. Por isso eu conferi cada posição com duas fontes, o OpenStreetMap e a Wikipédia. Meus números iniciais erravam até 1,6 km, como no Farol do Mucuripe, e eu corrigi todos. As 31 fotos têm licença livre e mostram o autor. Teve um caso curioso: a Wikipédia apontava um forte em Portugal no lugar da Fortaleza de Nossa Senhora da Assunção, e eu só percebi porque comparei as coordenadas. O que eu não consegui confirmar, tirei do app. Também tenho 28 testes automáticos que rodam a cada publicação. Os horários de funcionamento ainda são estimados, e o app avisa isso.
+Num app de turismo, um pin no lugar errado é o erro mais visível. Por isso eu conferi cada posição no OpenStreetMap e, quando tinha, também na Wikipédia. Meus números iniciais erravam até 1,6 km, como no Farol do Mucuripe, e eu corrigi todos. As 47 fotos têm licença livre e mostram o autor. Teve um caso curioso: a Wikipédia apontava um forte em Portugal no lugar da Fortaleza de Nossa Senhora da Assunção, e eu só percebi porque comparei as coordenadas. O que eu não consegui confirmar, tirei do app. Também tenho 28 testes automáticos que rodam a cada publicação. Os horários de funcionamento ainda são estimados, e o app avisa isso.
 
 ## 15. No ar, de graça e de forma automática
 
@@ -65,11 +65,11 @@ Para publicar eu uso o GitHub Pages, que é gratuito. Funciona assim: eu envio o
 
 ## 16. O que ainda falta, e eu sei disso
 
-Quero ser sincero sobre os limites. Os horários são estimados, e o app avisa para confirmar no local. Os avisos da comunidade ficam só no aparelho de quem criou, porque eu não tenho servidor; esse é o primeiro próximo passo. Os serviços gratuitos às vezes demoram. Onze lugares ficaram sem foto, porque não achei imagem livre adequada. E eu ainda quero testar em mais celulares. Nos próximos passos, quero ter o servidor, versões em inglês e espanhol e medir a qualidade da busca.
+Quero ser sincero sobre os limites. Os horários são estimados, e o app avisa para confirmar no local. Os avisos da comunidade ficam só no aparelho de quem criou, porque eu não tenho servidor; esse é o primeiro próximo passo. Os serviços gratuitos às vezes demoram. Dezoito lugares ficaram sem foto, porque não achei imagem livre adequada. E eu ainda quero testar em mais celulares. Nos próximos passos, quero ter o servidor, versões em inglês e espanhol e medir a qualidade da busca.
 
 ## 17. Como foi feito
 
-Resumindo como o projeto foi montado. O mapa usa o Leaflet com os dados do OpenStreetMap, e as rotas vêm da API do OSRM. A busca é um código próprio, com pontuação por campo, sinônimos e tolerância a erro de digitação. Chuva, UV, vento e ondas vêm da API do Open-Meteo. Os 42 lugares foram conferidos com o OpenStreetMap e a Wikipédia, e as fotos são do Wikimedia Commons, só com licença livre. Para publicar, o GitHub roda os testes e coloca o site no ar. Aprendi bastante sobre como uma busca funciona por dentro e como um app roda sem servidor.
+Resumindo como o projeto foi montado. O mapa usa o Leaflet com os dados do OpenStreetMap, e as rotas vêm da API do OSRM. A busca é um código próprio, com pontuação por campo, sinônimos e tolerância a erro de digitação. Chuva, UV, vento e ondas vêm da API do Open-Meteo. Os 65 lugares foram conferidos com o OpenStreetMap e a Wikipédia, e as fotos são do Wikimedia Commons, só com licença livre. Para publicar, o GitHub roda os testes e coloca o site no ar. Aprendi bastante sobre como uma busca funciona por dentro e como um app roda sem servidor.
 
 ## 18. Obrigado!
 

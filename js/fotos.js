@@ -162,5 +162,29 @@ export const FOTOS = {
     "pagina": "https://commons.wikimedia.org/wiki/File:Cumbuco_Beach_House.jpg",
     "autor": "Joelkaula",
     "licenca": "CC BY-SA 4.0"
+  },
+  "palacio-luz": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Pal%C3%A1cio_da_Luz_06.jpg/960px-Pal%C3%A1cio_da_Luz_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Luz_06.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "praia-mucuripe": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Praia_do_Mucuripe.jpg/960px-Praia_do_Mucuripe.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Praia_do_Mucuripe.jpg",
+    "autor": "Rafael Ramos e David Andrade",
+    "licenca": "CC BY-SA 3.0"
+  },
+  "prainha-aquiraz": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Prainha_%28Aquiraz%29_02.jpg/960px-Prainha_%28Aquiraz%29_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Prainha_(Aquiraz)_02.jpg",
+    "autor": "Joelkaula",
+    "licenca": "CC BY-SA 4.0"
+  },
+  "parque-botanico": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Entrada_do_Parque_Bot%C3%A2nico_de_Caucaia_no_Cear%C3%A1.jpg/960px-Entrada_do_Parque_Bot%C3%A2nico_de_Caucaia_no_Cear%C3%A1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Entrada_do_Parque_Bot%C3%A2nico_de_Caucaia_no_Cear%C3%A1.jpg",
+    "autor": "Anjosecc",
+    "licenca": "CC BY-SA 4.0"
   }
 };

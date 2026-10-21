@@ -21,6 +21,8 @@ const DE_ARTIGO = { // título do artigo na Wikipédia em português
   "beira-mar-feirinha": "Feira de Artesanato da Beira-Mar", "praia-meireles": "Praia de Meireles", "farol-mucuripe": "Farol do Mucuripe",
   "estoril": "Estoril (Fortaleza)", "coco": "Parque Estadual do Cocó", "sabiaguaba": "Parque Natural Municipal das Dunas de Sabiaguaba",
   "castelao": "Estádio Governador Plácido Castelo", "cumbuco": "Cumbuco", "lagoa-messejana": "Lagoa de Messejana",
+  "palacio-luz": "Palácio da Luz", "palacio-abolicao": "Palácio da Abolição", "prainha-aquiraz": "Prainha (Aquiraz)",
+  "parque-botanico": "Parque Estadual Botânico do Ceará", "pinacoteca": "Pinacoteca do Ceará", "praia-mucuripe": "Praia do Mucuripe",
 };
 const DE_COMMONS = { // arquivo do Commons
   "estatua-iracema": "File:Estátua de Iracema Guardiã 02.jpg",

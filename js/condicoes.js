@@ -61,3 +61,18 @@ export function conselhos(c, { praia = false, kite = false } = {}) {
   else if (kite && c.vento != null && c.vento < 15) dicas.push("Vento fraco para kitesurf hoje.");
   return dicas;
 }
+
+/** Normaliza a tag wheelchair do OpenStreetMap: yes/designated = sim, limited = parcial, no = nao, o resto = desconhecido. */
+export function nivelAcesso(valor) {
+  const v = String(valor ?? "").toLowerCase();
+  if (v === "yes" || v === "designated") return "sim";
+  if (v === "limited") return "parcial";
+  if (v === "no") return "nao";
+  return "desconhecido";
+}
+export const TEXTO_ACESSO = {
+  sim: "Acessível para cadeira de rodas",
+  parcial: "Acesso parcial para cadeira de rodas",
+  nao: "Sem acesso para cadeira de rodas",
+  desconhecido: "Sem informação de acessibilidade ainda",
+};

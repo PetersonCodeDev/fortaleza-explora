@@ -242,3 +242,9 @@ h4.sec { margin: 22px 0 6px; font: 400 17px var(--f-titulo); }
   :root { --papel: none; }
   .leaflet-tile-pane, :root[data-tema="escuro"] .leaflet-tile-pane { filter: none; }
 }
+
+/* acessibilidade (dado do OpenStreetMap) */
+.acesso { display: inline-flex; gap: 5px; align-items: center; color: var(--pri); font-weight: 600; }
+.acesso.parcial { color: var(--sol); }
+.acesso.nao { color: var(--ruim); }
+.acesso.desconhecido { color: var(--mut); font-weight: 500; }

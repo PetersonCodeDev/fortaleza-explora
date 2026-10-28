@@ -4,7 +4,8 @@ import { horasDoSol, horaPorDoSol, periodo, estaChovendo, sugestaoAgora, luzDour
 import { gerarCartao } from "./cartao.js";
 import { icone, pinSvg, iconePaths, jangadaSvg } from "./icons.js";
 import { FOTOS } from "./fotos.js";
-import { lerCondicoes, linhasCondicoes, conselhos } from "./condicoes.js";
+import { lerCondicoes, linhasCondicoes, conselhos, nivelAcesso, TEXTO_ACESSO } from "./condicoes.js";
+import { ACESSIBILIDADE } from "./acessibilidade.js";
 import { resumoPassaporte, selosNovos, anguloCarimbo, nomeCurto } from "./passaporte.js";
 import { CONFIG } from "./config.js";
 
@@ -26,7 +27,7 @@ const ler = (k, padrao) => { try { return JSON.parse(localStorage.getItem(k)) ??
 const minAtras = (ts) => Math.max(1, Math.round((Date.now() - ts) / 60000));
 
 const estado = {
-  q: "", categoria: "todas", ordenar: "relevancia", raioKm: 0, apenasAbertos: false, apenasGratis: false,
+  q: "", categoria: "todas", ordenar: "relevancia", raioKm: 0, apenasAbertos: false, apenasGratis: false, apenasAcessivel: false,
   origem: null, extras: ler("fx_osm", []), selecionado: null, modoRelato: false, limite: POR_PAGINA,
   agora: { por: null, chovendo: false, temp: null, sugestao: null }, usarAgora: false,
   gaveta: "meio", gavetaAntes: "meio", buscandoOnline: false, buscasOnline: new Set(), guia: null,
@@ -101,7 +102,10 @@ function renderAba(nome) {
 }
 function render() {
   salvarOsm();
-  const filtro = estado.usarAgora ? estado.agora.sugestao?.pred : null;
+  const filtros = [];
+  if (estado.usarAgora && estado.agora.sugestao?.pred) filtros.push(estado.agora.sugestao.pred);
+  if (estado.apenasAcessivel) filtros.push((p) => ["sim", "parcial"].includes(acessoDe(p)));
+  const filtro = filtros.length ? (p) => filtros.every((f) => f(p)) : null;
   resultados = buscar(todos(), { ...estado, filtro });
   sincronizarMarcadores();
   selVisual = estado.selecionado;
@@ -137,6 +141,7 @@ function renderChips() {
     itens.push(`<button class="chip" style="--c:${c.cor}" data-cat="${id}" aria-pressed="${estado.categoria === id}"><span class="ponto"></span>${c.nome}</button>`);
   itens.push(`<button class="chip sep" data-flag="apenasAbertos" aria-pressed="${estado.apenasAbertos}">Aberto agora</button>`);
   itens.push(`<button class="chip" data-flag="apenasGratis" aria-pressed="${estado.apenasGratis}">Grátis</button>`);
+  itens.push(`<button class="chip" data-flag="apenasAcessivel" aria-pressed="${estado.apenasAcessivel}">${icone("acessivel", 16)}Acessível</button>`);
   $("#chips").innerHTML = itens.join("");
 }
 
@@ -150,6 +155,20 @@ const nota = (n) => n.toFixed(1).replace(".", ",");
 
 /** Wikimedia só serve alguns tamanhos (250, 330, 500, 960...): a lista usa 250 px (~22 KB) em vez de 960 px (~200 KB). */
 const miniFoto = (src, w) => src.replace(/\/\d+px-/, `/${w}px-`);
+/** Acessibilidade: dado colaborativo do OpenStreetMap. Sem dado = "sem informação" (nunca inventamos). */
+const acessoDe = (p) => nivelAcesso(p.acessivel ?? ACESSIBILIDADE[p.id]?.valor);
+function acessoSelo(p) {
+  const n = acessoDe(p);
+  return n === "sim" || n === "parcial" ? `<span class="acesso ${n}">${icone("acessivel", 14)}${n === "sim" ? "Acessível" : "Acesso parcial"}</span>` : "";
+}
+function acessoHtml(p) {
+  const n = acessoDe(p);
+  const osm = `https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=19/${p.lat}/${p.lon}`;
+  const nota = n === "desconhecido" ? "Se você conhece o local, ajude a completar:" : "Dado colaborativo do OpenStreetMap, pode estar desatualizado. Para corrigir:";
+  return `<div class="cond"><div class="cond-titulo">Acessibilidade</div>
+    <p class="acesso ${n}">${icone("acessivel", 18)}<b>${esc(TEXTO_ACESSO[n])}</b></p>
+    <p style="margin:0;color:var(--mut);font-size:13px;line-height:1.4">${nota} <a href="${osm}" target="_blank" rel="noopener">abrir no OpenStreetMap</a>.</p></div>`;
+}
 const vazioHtml = (texto, extra = "") => `<div class="vazio">${jangadaSvg}<p>${texto}</p>${extra}</div>`;
 
 /** Foto do lugar (Wikipédia) ou, sem foto, a inicial do nome em serifa sobre fundo hachurado, como em guia impresso. */
@@ -170,7 +189,7 @@ function cardHtml(p, extra = "") {
     <div>
       <span class="cat" style="--c:${c.cor}">${esc(c.nome)}${p.bairro ? ` · ${esc(p.bairro)}` : ""}</span>
       <h3>${esc(p.nome)}</h3>
-      <div class="meta">${p._osm ? "<span>OpenStreetMap</span>" : ""}${p.patrocinado ? `<span class="patroc">Patrocinado</span>` : ""}${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${dist != null ? `<span>${formatarDistancia(dist)}</span>` : ""}${carimbado}${extra}</div>
+      <div class="meta">${p._osm ? "<span>OpenStreetMap</span>" : ""}${p.patrocinado ? `<span class="patroc">Patrocinado</span>` : ""}${statusAberto(p) ? `<span>${statusAberto(p)}</span>` : ""}${spanPreco(p)}${p.nota ? `<span>${nota(p.nota)} ★</span>` : ""}${acessoSelo(p)}${dist != null ? `<span>${formatarDistancia(dist)}</span>` : ""}${carimbado}${extra}</div>
     </div>
     <button class="fav" data-fav="${esc(p.id)}" aria-label="${fav ? "Remover dos favoritos" : "Favoritar"} ${esc(p.nome)}" aria-pressed="${fav}">${icone("coracao", 20, fav)}</button>
   </li>`;
@@ -406,6 +425,7 @@ function abrirDetalhe(id, { mover = true, renderizar = false } = {}) {
     ${p.horario ? `<p class="meta" style="margin-top:-6px">${esc(horarioTexto(p.horario))}. Horário estimado: confirme no local.</p>` : ""}
     ${p.dica ? `<div class="dica"><small>Dica local</small>${esc(p.dica)}</div>` : ""}
     <div id="condicoes"></div>
+    ${acessoHtml(p)}
     ${luzHtml(p)}
     ${avisos.length ? `<div class="dica"><small>Avisos aqui perto</small>${avisos.map((r) => esc(r.texto || TIPOS_RELATO[r.tipo].nome)).join("<br>")}</div>` : ""}
     <div class="modos">
@@ -610,7 +630,7 @@ function incorporar(elementos, tagsExtra = [], bonus = 0) {
     const lugar = {
       id, nome: t.name, categoria: categoriaOSM(t), bairro: t["addr:suburb"] ?? t["addr:street"] ?? "", lat, lon, _osm: true,
       descricao: [t.cuisine && `Tipo: ${cozinhaTxt(t.cuisine)}`, t.opening_hours && `Horário: ${t.opening_hours}`, t.website && `Site: ${t.website}`].filter(Boolean).join(" · "),
-      tags: [t.tourism, t.amenity, t.historic, t.leisure, t.cuisine, ...tagsExtra].filter(Boolean), preco: null, horario: null, _bonus: bonus,
+      tags: [t.tourism, t.amenity, t.historic, t.leisure, t.cuisine, ...tagsExtra].filter(Boolean), preco: null, horario: null, acessivel: t.wheelchair ?? null, _bonus: bonus,
     };
     estado.extras.push(lugar); base.push(lugar);
     novos++;

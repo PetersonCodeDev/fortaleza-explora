@@ -288,3 +288,16 @@ Dados do mapa © colaboradores do **OpenStreetMap** (ODbL) · **Leaflet** (BSD-2
 ## 18. Ferramentas usadas no desenvolvimento
 
 _(Preencher conforme a regra da disciplina sobre uso de ferramentas de apoio. Este projeto foi desenvolvido com auxílio de um assistente de programação de IA (Claude Code), com revisão e testes do autor. Descreva aqui o que você escreveu, o que foi apoiado pela ferramenta e como validou.)_
+
+---
+
+## 19. Atualização de 28/10/2026: celular mais rápido e acessibilidade
+
+**Desempenho no celular (medido, não suposto).** Uma pessoa relatou que o app travava no celular. Criei `ferramentas/desempenho.mjs`, que abre o app num celular simulado (tela de 390 px e CPU 4x mais lenta) e mede o tempo de cada quadro durante três gestos: arrastar a gaveta, arrastar o mapa e rolar a lista.
+- **Causa principal:** a gaveta mudava de altura a cada quadro, forçando o navegador a recalcular o layout da página inteira (1.700 elementos). Cerca de 30% dos quadros travavam.
+- **Correção:** a gaveta passou a ter altura fixa e a subir e descer por `transform`, que a placa de vídeo faz sem recalcular o layout. Resultado: 0 a 4% dos quadros lentos, com média de 17 ms (60 por segundo).
+- **Outras correções:** o app desenha só a aba que está aberta (o passaporte refazia 65 carimbos em SVG a cada toque); abrir um lugar troca só o destaque em vez de refazer a lista; as miniaturas da lista usam a foto de 250 px (~22 KB) em vez de 960 px (~200 KB); a sombra dos pins foi desenhada no próprio SVG (sem filtro CSS); no celular o mapa fica sem filtro de cor e sem textura de papel.
+- **Limite honesto:** a medição é em computador com CPU reduzida. O custo real na placa de vídeo de cada aparelho só se confirma testando no celular.
+
+**Acessibilidade.** Sugestão recebida: indicar restaurantes e outros lugares com estrutura para pessoas com deficiência, a partir de comentários de outras pessoas. O OpenStreetMap já guarda esse dado de forma colaborativa (tag `wheelchair`). `ferramentas/acessibilidade-osm.mjs` consulta o dado de cada lugar da base: **10 de 65** têm informação (todos "acessível"); os outros ficam como "sem informação ainda", nunca inventada. No app: selo "Acessível" nos cards, bloco "Acessibilidade" no detalhe, filtro "Acessível" e um link para qualquer pessoa completar ou corrigir o dado no OpenStreetMap. Lugares achados pela busca online também trazem a tag quando existe.
+- **O que falta para ter comentários dentro do app:** um servidor (banco de dados) para guardar e compartilhar os relatos entre pessoas, com moderação. Sem servidor, comentários ficariam só no aparelho de quem os escreveu. Caminho sugerido: banco gratuito (por exemplo Supabase) acessado direto pelo navegador, com limite de envios e moderação antes de publicar.

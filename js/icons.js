@@ -41,6 +41,7 @@ const P = {
   foto: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   carimbo: '<path d="M9 3h6v6.5a3 3 0 0 1-1.5 2.6V14H18a2 2 0 0 1 2 2v2H4v-2a2 2 0 0 1 2-2h4.5v-1.9A3 3 0 0 1 9 9.5z"/><path d="M4 21h16"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  acessivel: '<circle cx="12" cy="4.2" r="1.7"/><path d="M12 7.5v6.5h4.6l2.4 5M12 10.6h4.2M8.1 12.4a5 5 0 1 0 6.6 7.4"/>',
   chevron: '<path d="M6 15l6-6 6 6"/>',
 };
 

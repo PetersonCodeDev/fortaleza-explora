@@ -51,6 +51,7 @@ export const icone = (nome, tam = 20, cheio = false) =>
 /** Marcador de mapa em forma de gota, na cor da categoria, com o ícone dentro. */
 export const pinSvg = (nome, cor, sel = false) =>
   `<svg width="${sel ? 40 : 32}" height="${sel ? 50 : 40}" viewBox="0 0 30 38" aria-hidden="true">
+    <path d="M15 37S2 24.5 2 14.5a13 13 0 0 1 26 0C28 24.5 15 37 15 37z" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="${sel ? 4.4 : 3.2}" stroke-linejoin="round"/>
     <path d="M15 37S2 24.5 2 14.5a13 13 0 0 1 26 0C28 24.5 15 37 15 37z" fill="${cor}" stroke="${sel ? "#fff" : "rgba(255,255,255,.9)"}" stroke-width="${sel ? 2.4 : 1.6}"/>
     <g transform="translate(7.2 6.7) scale(.67)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${P[nome] ?? ""}</g>
   </svg>`;

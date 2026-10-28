@@ -87,13 +87,45 @@ function salvarOsm() { // só os lugares do OSM que a pessoa guardou (favoritos/
   const json = JSON.stringify(estado.extras.filter((p) => usados.has(p.id)));
   if (json !== ultimoOsm) { ultimoOsm = json; try { localStorage.setItem("fx_osm", json); } catch {} }
 }
+let abaAtiva = "lista";
+function atualizarContadores() {
+  const feitos = DADOS.reduce((n, p) => n + (estado.passaporte[p.id] ? 1 : 0), 0);
+  $("#n-passaporte").textContent = feitos ? `${feitos}` : "";
+  const nr = estado.roteiro.filter(porId).length;
+  $("#n-roteiro").textContent = nr || "";
+}
+function renderAba(nome) {
+  if (nome === "lista") renderLista();
+  else if (nome === "roteiro") renderRoteiro();
+  else if (nome === "passaporte") renderPassaporte();
+}
 function render() {
   salvarOsm();
   const filtro = estado.usarAgora ? estado.agora.sugestao?.pred : null;
   resultados = buscar(todos(), { ...estado, filtro });
   sincronizarMarcadores();
-  renderLista(); renderRoteiro(); renderPassaporte(); renderRelatos(); renderChips();
+  selVisual = estado.selecionado;
+  atualizarContadores(); renderRelatos(); renderChips();
   $("#n-lista").textContent = resultados.length;
+  renderAba(abaAtiva); // só a aba que está aberta; as outras são refeitas quando a pessoa troca de aba
+}
+
+/** Troca só o destaque do lugar (na lista e no mapa), sem refazer a lista toda. */
+let selVisual = null;
+function marcarSelecionado() {
+  const novo = estado.selecionado;
+  if (novo === selVisual) return;
+  document.querySelector(".item.atual")?.classList.remove("atual");
+  if (novo) [...document.querySelectorAll(".item")].find((e) => e.dataset.id === novo)?.classList.add("atual");
+  for (const id of [selVisual, novo]) {
+    if (!id) continue;
+    const m = marcadores.get(id), p = porId(id);
+    if (!m || !p) continue;
+    const sel = id === novo;
+    if (m._sel !== sel) { m.setIcon(iconePin(p, sel)); m._sel = sel; }
+    m.setZIndexOffset(sel ? 1000 : 0);
+  }
+  selVisual = novo;
 }
 
 function renderChips() {
@@ -116,12 +148,14 @@ const precoTxt = (n) => (n == null ? "" : n === 0 ? "Grátis" : "$".repeat(n));
 const spanPreco = (p) => (precoTxt(p.preco) ? `<span>${precoTxt(p.preco)}</span>` : "");
 const nota = (n) => n.toFixed(1).replace(".", ",");
 
+/** Wikimedia só serve alguns tamanhos (250, 330, 500, 960...): a lista usa 250 px (~22 KB) em vez de 960 px (~200 KB). */
+const miniFoto = (src, w) => src.replace(/\/\d+px-/, `/${w}px-`);
 const vazioHtml = (texto, extra = "") => `<div class="vazio">${jangadaSvg}<p>${texto}</p>${extra}</div>`;
 
 /** Foto do lugar (Wikipédia) ou, sem foto, a inicial do nome em serifa sobre fundo hachurado, como em guia impresso. */
 function miniatura(p) {
   const f = FOTOS[p.id];
-  if (f) return `<img class="foto" src="${esc(f.src)}" alt="" loading="lazy" decoding="async" width="76" height="76">`;
+  if (f) return `<img class="foto" src="${esc(miniFoto(f.src, 250))}" alt="" loading="lazy" decoding="async" width="76" height="76">`;
   const ini = (p.nome.replace(/^(o|a|os|as|de|do|da|centro|museu|parque|praia|mercado|teatro)\s+/i, "").trim()[0] ?? p.nome[0] ?? "?").toUpperCase();
   return `<div class="inicial" style="--c:${corDe(p)}" aria-hidden="true">${esc(ini)}</div>`;
 }
@@ -238,7 +272,7 @@ function abrirFolha(html, hero = "") { folha.innerHTML = `${hero}<div class="cor
 function fecharFolha() {
   folha.hidden = true; camadaRota.clearLayers(); fala?.cancel();
   if (estado._forcada) { estado._forcada = false; definirGaveta(estado.gavetaAntes); }
-  if (estado.selecionado) { estado.selecionado = null; render(); }
+  if (estado.selecionado) { estado.selecionado = null; marcarSelecionado(); }
 }
 const topoFolha = (titulo, voltar) => `<div class="folha-topo">${voltar ? `<button class="x" data-voltar aria-label="Voltar">${icone("voltar", 18)}</button>` : ""}<h2>${esc(titulo)}</h2><button class="x" data-fechar aria-label="Fechar">${icone("fechar", 18)}</button></div>`;
 
@@ -347,7 +381,7 @@ function centralizarForaDaFolha(p) {
   else mapa.panBy([-(folha.offsetWidth + 12) / 2, 0], { animate: false });
 }
 
-function abrirDetalhe(id, { mover = true } = {}) {
+function abrirDetalhe(id, { mover = true, renderizar = false } = {}) {
   const p = porId(id);
   if (!p) return;
   if (celular() && estado.gaveta !== "min") { estado.gavetaAntes = estado.gaveta; estado._forcada = true; definirGaveta("min"); }
@@ -395,7 +429,7 @@ function abrirDetalhe(id, { mover = true } = {}) {
   folha.dataset.id = id; folha.dataset.modo = "detalhe";
   if (mover) centralizarForaDaFolha(p);
   carregarCondicoes(p);
-  render();
+  if (renderizar) render(); else marcarSelecionado(); // render() completo só quando algo mudou (favorito, roteiro, carimbo)
 }
 
 folha.addEventListener("click", async (e) => {
@@ -404,13 +438,13 @@ folha.addEventListener("click", async (e) => {
   if (t.hasAttribute("data-fechar")) return fecharFolha();
   if (t.hasAttribute("data-voltar")) return abrirDetalhe(id, { mover: false });
   if (t.dataset.rota) return tracarRota(id, t.dataset.rota);
-  if (t.dataset.fav) { alternarFavorito(id); return abrirDetalhe(id, { mover: false }); }
+  if (t.dataset.fav) { alternarFavorito(id); return abrirDetalhe(id, { mover: false, renderizar: true }); }
   if (t.dataset.roteiro) {
     const i = estado.roteiro.indexOf(id);
     i >= 0 ? estado.roteiro.splice(i, 1) : estado.roteiro.push(id);
     guardar("fx_roteiro", estado.roteiro);
     toast(i >= 0 ? "Tirado do roteiro" : "Adicionado ao roteiro");
-    return abrirDetalhe(id, { mover: false });
+    return abrirDetalhe(id, { mover: false, renderizar: true });
   }
   if (t.hasAttribute("data-carimbar")) {
     const antes = resumoPassaporte(estado.passaporte, DADOS);
@@ -418,7 +452,7 @@ folha.addEventListener("click", async (e) => {
     guardar("fx_passaporte", estado.passaporte);
     const novos = selosNovos(antes, resumoPassaporte(estado.passaporte, DADOS));
     toast(!estado.passaporte[id] ? "Carimbo removido" : novos.length ? `Carimbado! Novo selo: ${novos[0].nome}` : "Carimbado no seu passaporte", novos.length ? 4500 : 2600);
-    return abrirDetalhe(id, { mover: false });
+    return abrirDetalhe(id, { mover: false, renderizar: true });
   }
   if (t.hasAttribute("data-ouvir")) {
     if (fala?.speaking) { fala.cancel(); t.innerHTML = ouvirHtml(false); return; }
@@ -823,6 +857,8 @@ $("#aba-lista").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.
 document.querySelectorAll(".abas [data-aba]").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll(".abas [data-aba]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
   for (const a of ["lista", "roteiro", "passaporte", "relatos"]) $(`#aba-${a}`).hidden = a !== b.dataset.aba;
+  abaAtiva = b.dataset.aba;
+  renderAba(abaAtiva);
   $(".conteudo").scrollTop = 0;
   if (celular() && estado.gaveta === "min") definirGaveta("meio");
 }));
@@ -831,17 +867,32 @@ document.querySelectorAll(".abas [data-aba]").forEach((b) => b.addEventListener(
 const painel = $("#painel");
 const POSICOES = ["min", "meio", "alto"];
 const celular = () => matchMedia("(max-width:820px)").matches;
-// alturas dos 3 encaixes: só a barra de abas / meio / quase tela cheia
-const alturas = () => ({ min: $("#alca").offsetHeight + $(".abas").offsetHeight + 2, meio: Math.round(innerHeight * 0.38), alto: Math.round(innerHeight * 0.78) });
+// alturas dos 3 encaixes: só a barra de abas / meio / quase tela cheia. Medidas uma vez (medir a cada toque
+// obrigava o navegador a recalcular o layout da página inteira).
+const fabs = $(".fabs"), toastEl = $("#toast");
+let medidas = null, hAtual = 0, altaVisivel = false;
+const medir = () => (medidas = { min: $("#alca").offsetHeight + $(".abas").offsetHeight + 2, meio: Math.round(innerHeight * 0.38), alto: Math.round(innerHeight * 0.78) });
+const alturas = () => medidas ?? medir();
 function aplicarAltura(px) {
-  painel.style.height = `${px}px`;
-  document.documentElement.style.setProperty("--ph", `${px}px`);
-  document.body.classList.toggle("gaveta-alta", px > innerHeight * 0.55); // botões flutuantes saem do caminho
+  hAtual = px;
+  // o painel tem sempre a altura "alto"; subir e descer é só deslocar (transform), que é barato
+  painel.style.transform = `translate3d(0, ${alturas().alto - px}px, 0)`;
+  fabs.style.transform = toastEl.style.transform = `translate3d(0, ${-px}px, 0)`;
+  const alta = px > innerHeight * 0.55; // botões flutuantes saem do caminho
+  if (alta !== altaVisivel) { altaVisivel = alta; document.body.classList.toggle("gaveta-alta", alta); }
 }
 function definirGaveta(g) {
   estado.gaveta = g;
-  if (celular()) aplicarAltura(alturas()[g]);
-  else { painel.style.height = ""; document.documentElement.style.removeProperty("--ph"); }
+  if (celular()) {
+    const a = medir();
+    painel.style.height = `${a.alto}px`;
+    aplicarAltura(a[g]);
+    $(".conteudo").style.paddingBottom = `${a.alto - a[g] + 20}px`; // o fim da lista continua alcançável com a gaveta baixa
+  } else {
+    painel.style.height = painel.style.transform = fabs.style.transform = toastEl.style.transform = "";
+    $(".conteudo").style.paddingBottom = "";
+    document.body.classList.remove("gaveta-alta"); altaVisivel = false;
+  }
 }
 const moverGaveta = (passo) => definirGaveta(POSICOES[Math.max(0, Math.min(2, POSICOES.indexOf(estado.gaveta) + passo))]);
 const maisProximo = (h) => { const a = alturas(); return POSICOES.reduce((m, k) => (Math.abs(a[k] - h) < Math.abs(a[m] - h) ? k : m)); };
@@ -851,7 +902,7 @@ let arrasto = null, houveArrasto = false;
 for (const alvo of [$("#alca"), $(".abas")]) {
   alvo.addEventListener("pointerdown", (e) => {
     if (!celular() || (e.pointerType === "mouse" && e.button !== 0)) return;
-    arrasto = { y0: e.clientY, h0: painel.getBoundingClientRect().height, y: e.clientY, t: performance.now(), v: 0, moveu: false };
+    arrasto = { y0: e.clientY, h0: hAtual, y: e.clientY, t: performance.now(), v: 0, moveu: false };
   });
   alvo.addEventListener("click", (e) => { if (houveArrasto) { e.stopPropagation(); e.preventDefault(); } }, true);
 }
@@ -871,14 +922,13 @@ function soltar() {
   document.body.classList.remove("arrastando");
   if (!moveu) return;
   houveArrasto = true; setTimeout(() => (houveArrasto = false), 60);
-  const h = painel.getBoundingClientRect().height;
-  const atual = POSICOES.indexOf(maisProximo(h));
+  const atual = POSICOES.indexOf(maisProximo(hAtual));
   // arremesso rápido vai para o próximo encaixe na direção do dedo; devagar, vai para o mais próximo
   definirGaveta(Math.abs(v) > 0.5 ? POSICOES[Math.max(0, Math.min(2, atual + (v < 0 ? 1 : -1)))] : POSICOES[atual]);
 }
 addEventListener("pointerup", soltar);
 addEventListener("pointercancel", soltar);
-addEventListener("resize", () => definirGaveta(estado.gaveta));
+addEventListener("resize", () => { medidas = null; definirGaveta(estado.gaveta); });
 $("#alca").onclick = () => moverGaveta(estado.gaveta === "alto" ? -1 : 1);
 // no computador: botão que esconde a lista e deixa o mapa inteiro livre
 $("#btn-painel").onclick = () => {

@@ -49,16 +49,54 @@ const P = {
 export const icone = (nome, tam = 20, cheio = false) =>
   `<svg class="ic" width="${tam}" height="${tam}" viewBox="0 0 24 24" fill="${cheio ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[nome] ?? ""}</svg>`;
 
-/** Marcador de mapa em forma de gota, na cor da categoria, com o ícone dentro. */
-export const pinSvg = (nome, cor, sel = false) =>
-  `<svg width="${sel ? 40 : 32}" height="${sel ? 50 : 40}" viewBox="0 0 30 38" aria-hidden="true">
-    <path d="M15 37S2 24.5 2 14.5a13 13 0 0 1 26 0C28 24.5 15 37 15 37z" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="${sel ? 4.4 : 3.2}" stroke-linejoin="round"/>
-    <path d="M15 37S2 24.5 2 14.5a13 13 0 0 1 26 0C28 24.5 15 37 15 37z" fill="${cor}" stroke="${sel ? "#fff" : "rgba(255,255,255,.9)"}" stroke-width="${sel ? 2.4 : 1.6}"/>
-    <g transform="translate(7.2 6.7) scale(.67)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${P[nome] ?? ""}</g>
-  </svg>`;
+/* ---------- Símbolos das categorias: desenhados para Fortaleza, em formas cheias (não são ícones de biblioteca) ---------- */
+// Grade 24x24, cor = currentColor. Detalhes finos usam traço (stroke="currentColor") para não depender de cor fixa.
+const GLIFOS = {
+  // jangada: duas velas triangulares sobre os paus
+  praia: '<path d="M13 3l7.4 12.2H13z"/><path d="M11 6.2L5.4 15.2H11z"/><path d="M3 17.3h18l-1.9 3H4.9z"/>',
+  // muralha com ameias e portão em arco (a Fortaleza que deu nome à cidade)
+  historia: '<path fill-rule="evenodd" d="M4 20.5V8h3.2v3.4h3.4V8h2.8v3.4h3.4V8H20v12.5zM10.2 20.5v-4.3a1.8 1.8 0 0 1 3.6 0v4.3z"/>',
+  // máscara de teatro com olhos e sorriso vazados
+  cultura: '<path fill-rule="evenodd" d="M4.6 4.5h14.8v8.3a7.4 7.4 0 0 1-14.8 0zM8.2 9.6a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0zM12.8 9.6a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0zM8.3 14.2q3.7 3.6 7.4 0q-3.7 1.2-7.4 0z"/>',
+  // caju: o fruto e a castanha, símbolo do Ceará
+  gastronomia: '<path d="M11.6 7.4c3.8-.2 7 2.7 7 6.6 0 3.8-3 6.6-6.9 6.6s-6.9-2.8-6.9-6.6c0-3.6 2.6-6.4 6.8-6.6z"/><path d="M13.2 6.6c.1-2.2 2.2-3.8 4.6-3.4.4 2.4-1 4.4-3.3 4.8-.9.1-1.3-.4-1.3-1.4z"/>',
+  // carnaúba: tronco e leque de folhas
+  natureza: '<path d="M11.3 21.5l.5-11h.9l.5 11z"/><path d="M12.2 10.6c1.5-3.7 5.1-5.3 8.1-4.7-1.3 3.1-4.6 5.1-8.1 4.7z"/><path d="M12.2 10.6C10.7 6.9 7 5.3 4 5.9c1.3 3.1 4.6 5.1 8.2 4.7z"/><path d="M12.2 9.8C10.4 7 10.5 4.1 12.2 2.3c1.7 1.8 1.8 4.7 0 7.5z"/>',
+  // pipa de kitesurf, com a cauda
+  lazer: '<path d="M12 2.4l6.2 6.3-6.2 6.5-6.2-6.5z"/><path d="M12 15.3c-1.6 1.5.9 2.5-.6 4.4M12 15.3c1.6 1.4-.8 2.6.7 4.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+  // lua crescente e uma estrela
+  noite: '<path d="M16.8 15.6A7.3 7.3 0 1 1 8.7 4.9a5.9 5.9 0 0 0 8.1 10.7z"/><path d="M18.8 3.6l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+  // sacola de compras com alça
+  compras: '<path d="M5.4 9.2h13.2l-1.3 11.3H6.7z"/><path d="M9 9.2V7.6a3 3 0 0 1 6 0v1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+};
+/** Caminhos do símbolo da categoria (para desenhar dentro de outro SVG, como o carimbo do passaporte). */
+export const glifoPaths = (cat) => GLIFOS[cat] ?? GLIFOS.lazer;
 
-/** Caminhos crus de um ícone, para desenhar dentro de outro SVG (usado no carimbo do passaporte). */
-export const iconePaths = (nome) => P[nome] ?? "";
+// borda do selo: 12 "dentes" de carimbo/selo postal, calculada uma vez
+const BORDA_SELO = (() => {
+  const n = 12, R = 14.2, rs = 4.3, c = 17;
+  let d = "";
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * 2 * Math.PI;
+    const x = (c + R * Math.cos(a)).toFixed(2), y = (c + R * Math.sin(a)).toFixed(2);
+    d += i === 0 ? `M${x} ${y}` : `A${rs} ${rs} 0 0 1 ${x} ${y}`;
+  }
+  return d + "z";
+})();
+
+/**
+ * Marcador do mapa: um selo recortado (como o carimbo do passaporte) na cor da categoria, com o símbolo dentro.
+ * `sel` = lugar aberto (maior, com aro laranja). `visitado` = já carimbado (bolinha com check no canto).
+ */
+export const seloSvg = (cat, cor, sel = false, visitado = false) =>
+  `<svg width="${sel ? 54 : 38}" height="${sel ? 54 : 38}" viewBox="-3 -3 40 40" aria-hidden="true">
+    <path d="${BORDA_SELO}" fill="rgba(0,0,0,.30)" stroke="rgba(0,0,0,.30)" stroke-width="3.2" stroke-linejoin="round"/>
+    ${sel ? '<circle cx="17" cy="17" r="18.4" fill="none" stroke="#D4601C" stroke-width="2.4"/>' : ""}
+    <path d="${BORDA_SELO}" fill="${cor}" stroke="#FBF7EE" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="17" cy="17" r="11" fill="none" stroke="#FBF7EE" stroke-width=".9" stroke-dasharray="1.3 1.7" opacity=".85"/>
+    <g transform="translate(10.1 10.1) scale(.58)" fill="#FBF7EE" color="#FBF7EE">${glifoPaths(cat)}</g>
+    ${visitado ? '<circle cx="29.5" cy="4.5" r="4.4" fill="#D4601C" stroke="#FBF7EE" stroke-width="1.4"/><path d="M27.5 4.6l1.5 1.5 2.7-2.9" fill="none" stroke="#FBF7EE" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>' : ""}
+  </svg>`;
 
 /** Jangada em estilo xilogravura (arte de cordel do Ceará): traço grosso e hachuras. Cores vêm do tema. */
 export const jangadaSvg = `<svg class="jangada" viewBox="0 0 220 132" aria-hidden="true">

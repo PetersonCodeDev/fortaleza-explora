@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fortaleza Explora · Guia visual</title>
+  <meta name="author" content="Pedro Peterson">
+  <link rel="stylesheet" href="../css/fonts.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body { display: block; height: auto; overflow: auto; }
+    main { max-width: 1100px; margin: auto; padding: 36px 24px 80px; display: grid; gap: 52px; }
+    h1 { font: 400 56px/1.05 var(--f-titulo); margin: 0; letter-spacing: -.02em; }
+    h2 { font: 400 32px/1.1 var(--f-titulo); margin: 0 0 6px; }
+    .sub { color: var(--mut); max-width: 62ch; margin: 0 0 18px; }
+    .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .cartao { border: 1px solid var(--line); background: var(--card); padding: 18px; display: grid; gap: 10px; justify-items: start; }
+    .cartao b { font: 400 20px var(--f-titulo); }
+    .cartao small { color: var(--mut); }
+    .mapa-falso { background: #e9e2cf; background-image: linear-gradient(#d9d0b8 1px, transparent 1px), linear-gradient(90deg, #d9d0b8 1px, transparent 1px); background-size: 28px 28px; padding: 14px; width: 100%; display: flex; gap: 14px; align-items: center; }
+    .amostras { display: flex; gap: 12px; flex-wrap: wrap; }
+    .cor { width: 150px; border: 1px solid var(--line); background: var(--card); }
+    .cor i { display: block; height: 78px; }
+    .cor span { display: block; padding: 8px 10px; font-size: 13px; }
+    .cor b { display: block; font-size: 14px; }
+    .fonte { display: grid; gap: 6px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+    .carimbos-guia { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; max-width: 760px; }
+    .lado { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="cat" style="--c:var(--sol)">Guia visual · versão de 29/10/2026</p>
+    <h1>Fortaleza Explora</h1>
+    <p class="sub">Um guia de turismo que parece um guia impresso: papel quente, verde do mar, laranja do sol, símbolos desenhados para Fortaleza. Esta página é gerada pelo próprio código do app, então sempre mostra o que está no ar.</p>
+  </header>
+
+  <section id="marcadores">
+    <h2>Marcadores do mapa: selos</h2>
+    <p class="sub">Cada categoria tem um símbolo próprio, tirado da cultura da cidade, dentro de um selo recortado (a mesma forma do carimbo do passaporte). O centro do selo é a posição exata do lugar. Três estados: normal, aberto (maior, com aro laranja) e já visitado (bolinha com check).</p>
+    <div class="grade" id="grade-marcadores"></div>
+  </section>
+
+  <section id="no-mapa">
+    <h2>Como aparecem juntos</h2>
+    <p class="sub">Selos próximos no mapa, com o lugar aberto em destaque.</p>
+    <div class="mapa-falso" id="mapa-falso"></div>
+  </section>
+
+  <section id="carimbos">
+    <h2>Carimbos do passaporte</h2>
+    <p class="sub">Carimbo colorido e levemente torto quando o lugar foi visitado, contorno tracejado e apagado quando ainda não.</p>
+    <div class="carimbos-guia" id="carimbos-guia"></div>
+  </section>
+
+  <section id="cores">
+    <h2>Cores</h2>
+    <p class="sub">Uma cor de apoio (verde-mar), um acento (laranja-sol) e a caneta azul das anotações. O tema escuro troca os valores e mantém as funções.</p>
+    <div class="amostras" id="amostras"></div>
+  </section>
+
+  <section id="tipografia">
+    <h2>Tipografia</h2>
+    <p class="sub">Três fontes, cada uma com uma função. Todas livres (SIL Open Font License) e servidas pelo próprio site.</p>
+    <div class="fonte"><small>Young Serif · títulos</small><span style="font:400 54px/1.05 var(--f-titulo)">Theatro José de Alencar</span></div>
+    <div class="fonte"><small>Atkinson Hyperlegible · texto (desenhada pelo Braille Institute para ser fácil de ler)</small><span style="font:400 20px/1.5 var(--f-corpo)">Teatro de 1910, tombado pelo Iphan: referência artística e arquitetônica do país, com estrutura de ferro em estilo art nouveau.</span></div>
+    <div class="fonte"><small>Caveat · anotações à mão</small><span style="font:500 34px/1.1 var(--f-mao); color:#24408E">Vá por volta das 17h30 para pegar o pôr do sol.</span></div>
+  </section>
+
+  <section id="ilustracao">
+    <h2>Ilustração: a jangada</h2>
+    <p class="sub">Em estilo xilogravura (a arte de cordel do Ceará): traço grosso e hachuras. Aparece quando uma lista está vazia.</p>
+    <div class="lado" id="jangada"></div>
+  </section>
+
+  <section id="componentes">
+    <h2>Componentes</h2>
+    <div class="lado">
+      <button class="btn pri">Adicionar ao roteiro</button>
+      <button class="btn">Salvar</button>
+      <button class="btn carimbar">Já fui aqui</button>
+      <span class="acesso sim" id="exemplo-acesso"></span>
+      <span class="chip agora" style="border:0">Hora de almoçar</span>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+  import { CATEGORIAS } from "../js/data.js";
+  import { seloSvg, glifoPaths, jangadaSvg, icone } from "../js/icons.js";
+  const $ = (s) => document.querySelector(s);
+  const NOMES = { praia: "Jangada", historia: "Muralha e portão", cultura: "Máscara de teatro", gastronomia: "Caju", natureza: "Carnaúba", lazer: "Pipa de kitesurf", noite: "Lua e estrela", compras: "Sacola" };
+
+  $("#grade-marcadores").innerHTML = Object.entries(CATEGORIAS).map(([id, c]) => `
+    <div class="cartao">
+      <b>${c.nome}</b><small>${NOMES[id]} · ${c.cor}</small>
+      <div class="lado" style="gap:10px">
+        <div style="zoom:2">${seloSvg(id, c.cor)}</div>
+        <div style="zoom:1">${seloSvg(id, c.cor, false)}</div>
+        <div style="zoom:1">${seloSvg(id, c.cor, true)}</div>
+        <div style="zoom:1">${seloSvg(id, c.cor, false, true)}</div>
+      </div>
+    </div>`).join("");
+
+  const cats = Object.entries(CATEGORIAS);
+  $("#mapa-falso").innerHTML = cats.map(([id, c], i) => `<div style="margin-top:${(i % 3) * 8}px">${seloSvg(id, c.cor, i === 2, i === 5)}</div>`).join("");
+
+  $("#carimbos-guia").innerHTML = cats.flatMap(([id, c]) => [true, false].map((on) => `
+    <svg class="carimbo ${on ? "on" : "off"}" style="--c:${c.cor};transform:rotate(${on ? (id.length % 7) - 3 : 0}deg)" viewBox="0 0 100 100" width="104" height="104" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3" ${on ? "" : 'stroke-dasharray="5 4"'}/>
+      <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.5 3"/>
+      <svg x="31" y="25" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">${glifoPaths(id)}</svg>
+      <text x="50" y="76" text-anchor="middle" font-family="Young Serif, Georgia, serif" font-size="8" fill="currentColor">${c.nome.toUpperCase()}</text>
+    </svg>`)).join("");
+
+  const CORES = [
+    ["Papel", "#F2ECDF", "fundo"], ["Cartão", "#FBF7EE", "superfícies"], ["Tinta", "#24211B", "texto"], ["Verde-mar", "#0B6E72", "cor de apoio"],
+    ["Laranja-sol", "#D4601C", "acento"], ["Caneta", "#24408E", "anotações à mão"], ["Linha", "#DDD3BD", "divisórias"],
+  ];
+  $("#amostras").innerHTML = CORES.map(([n, h, u]) => `<div class="cor"><i style="background:${h};${h === "#F2ECDF" || h === "#FBF7EE" ? "border-bottom:1px solid #DDD3BD" : ""}"></i><span><b>${n}</b>${h} · ${u}</span></div>`).join("")
+    + cats.map(([id, c]) => `<div class="cor"><i style="background:${c.cor}"></i><span><b>${c.nome}</b>${c.cor} · categoria</span></div>`).join("");
+
+  $("#jangada").innerHTML = `<div style="width:260px">${jangadaSvg.replace('class="jangada"', 'class="jangada" style="width:260px;height:auto"')}</div>`;
+  $("#exemplo-acesso").innerHTML = `${icone("acessivel", 18)}<b>Acessível para cadeira de rodas</b>`;
+</script>
+</body>
+</html>

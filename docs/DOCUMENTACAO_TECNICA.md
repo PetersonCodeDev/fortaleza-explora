@@ -301,3 +301,21 @@ _(Preencher conforme a regra da disciplina sobre uso de ferramentas de apoio. Es
 
 **Acessibilidade.** Sugestão recebida: indicar restaurantes e outros lugares com estrutura para pessoas com deficiência, a partir de comentários de outras pessoas. O OpenStreetMap já guarda esse dado de forma colaborativa (tag `wheelchair`). `ferramentas/acessibilidade-osm.mjs` consulta o dado de cada lugar da base: **10 de 65** têm informação (todos "acessível"); os outros ficam como "sem informação ainda", nunca inventada. No app: selo "Acessível" nos cards, bloco "Acessibilidade" no detalhe, filtro "Acessível" e um link para qualquer pessoa completar ou corrigir o dado no OpenStreetMap. Lugares achados pela busca online também trazem a tag quando existe.
 - **O que falta para ter comentários dentro do app:** um servidor (banco de dados) para guardar e compartilhar os relatos entre pessoas, com moderação. Sem servidor, comentários ficariam só no aparelho de quem os escreveu. Caminho sugerido: banco gratuito (por exemplo Supabase) acessado direto pelo navegador, com limite de envios e moderação antes de publicar.
+
+---
+
+## 20. Atualização de 29/10/2026: marcadores, agenda de eventos e guia visual
+
+**Marcadores do mapa ("selos").** Os pins genéricos foram trocados por selos recortados, a mesma forma do carimbo do passaporte. Cada categoria tem um símbolo próprio tirado da cidade: jangada (praias), muralha e portão (história), máscara de teatro (cultura), caju (gastronomia), carnaúba (natureza), pipa de kitesurf (lazer), lua e estrela (noite), sacola (compras). O centro do selo é a posição exata do lugar. Três estados: normal, aberto (maior, com aro laranja) e visitado (bolinha com check). Os símbolos ficam em `js/icons.js` (`glifoPaths`, `seloSvg`) e o mesmo desenho aparece no carimbo, então marcador e passaporte combinam.
+
+**Agenda de eventos (nova aba).** Fica em `js/agenda.js` (funções puras: data de Fortaleza, estado do evento, ordenação, evento em destaque, arquivo `.ics`) e `js/eventos.js` (os dados). Decisões:
+- **Só entra o que foi conferido numa fonte.** Não existe API aberta e gratuita de eventos de Fortaleza, então a lista é curada à mão: Cine Ceará (7 a 13/11/2026), Réveillon (31/12), Carnaval 2027 (6 a 9/02) e Ceará Natal de Luz (datas de 2026 ainda sem divulgação, por isso aparece em "datas a confirmar"). Eventos que não consegui confirmar (como Fortal e festas juninas) ficaram de fora de propósito: é melhor ter pouco e certo do que muito e errado.
+- **Agenda ao vivo.** Para shows e festas que mudam toda semana, a aba leva a Sympla, O Povo e Diário do Nordeste (links testados).
+- **Aviso no topo da lista** quando há evento confirmado rolando ou começando em até 21 dias.
+- **Adicionar ao calendário:** gera um `.ics` no próprio aparelho, sem servidor. O último dia do evento entra certo (no formato `.ics` o fim é exclusivo) e as linhas longas são quebradas em 75 bytes sem cortar caracteres escapados. Dois erros desse tipo apareceram nos testes e foram corrigidos.
+- **Fuso:** "hoje" é sempre calculado no horário de Fortaleza, não no do aparelho. Testado também com `TZ=UTC`.
+- **Como manter:** copiar um bloco de `js/eventos.js`, trocar datas e `id`, rodar `npm test` (ele confere datas, links e se os lugares existem).
+
+**Guia visual** (`design/guia.html`, link no repositório): página gerada pelo próprio código do app, com marcadores nos 4 estados, carimbos, paleta, tipografia, ilustração e componentes. Serve de apoio para a equipe de design, porque sempre mostra o que está no ar.
+
+**Testes e desempenho.** 40 testes (`npm test`), com 10 novos para a agenda. A medição de desempenho (`ferramentas/desempenho.mjs`, CPU 4x mais lenta) continua em 17 ms por quadro, com quase nenhum quadro lento, depois de cinco abas e selos novos. Limite honesto: não foi testado em celulares reais nem em iPhone.

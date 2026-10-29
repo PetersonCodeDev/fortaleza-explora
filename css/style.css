@@ -104,7 +104,7 @@ a { color: var(--pri); }
 
 /* ---------- pins e marcadores ---------- */
 .leaflet-marker-icon.pin { background: none; border: 0; }
-@media (hover: hover) { .leaflet-marker-icon.pin:hover svg { transform: translateY(-2px); } }
+@media (hover: hover) { .leaflet-marker-icon.pin:hover svg { transform: scale(1.08); } }
 .pin.osm svg { opacity: .8; }
 .voce { width: 16px; height: 16px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 7px rgba(37,99,235,.22); }
 .pin-relato { width: 30px; height: 30px; border-radius: 50%; background: var(--sol); color: #fff; border: 2px solid #fff; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
@@ -248,3 +248,23 @@ h4.sec { margin: 22px 0 6px; font: 400 17px var(--f-titulo); }
 .acesso.parcial { color: var(--sol); }
 .acesso.nao { color: var(--ruim); }
 .acesso.desconhecido { color: var(--mut); font-weight: 500; }
+
+/* agenda de eventos */
+.evento { border-left: 3px solid var(--c); padding: 4px 0 12px 12px; margin: 12px 0; display: grid; gap: 5px; border-bottom: 1px solid var(--line); }
+.evento h3 { margin: 0; font: 400 20px/1.15 var(--f-titulo); }
+.evento p { margin: 0; font-size: 14px; }
+.evento .cat b { color: var(--sol); }
+.evento-meta { color: var(--mut); font-size: 13px; }
+.evento .linha { margin-top: 4px; }
+.evento a.btn { text-decoration: none; }
+.ao-vivo { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ao-vivo a { display: grid; gap: 1px; padding: 10px 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; }
+.ao-vivo small { color: var(--mut); }
+.aviso-agenda { display: flex; align-items: center; gap: 8px; width: 100%; margin: 10px 0 0; padding: 9px 12px; border: 1px solid var(--sol); background: var(--card); color: var(--ink); font: inherit; font-size: 14px; text-align: left; }
+.aviso-agenda[hidden] { display: none; }
+.aviso-agenda span { flex: 1; }
+.aviso-agenda u { color: var(--sol); font-weight: 600; white-space: nowrap; }
+@media (max-width: 820px) {
+  .abas { padding-inline: 8px; }
+  .abas button { font-size: 14px; padding-inline: 2px; }
+}

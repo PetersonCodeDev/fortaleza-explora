@@ -2,12 +2,14 @@ import { DADOS, CATEGORIAS, ROTEIROS } from "./data.js";
 import { buscar, sugestoes, montarRoteiro, aberto, haversine, norm, formatarDistancia, formatarDuracao, horarioTexto, esc } from "./search.js";
 import { horasDoSol, horaPorDoSol, periodo, estaChovendo, sugestaoAgora, luzDourada, hhmm } from "./agora.js";
 import { gerarCartao } from "./cartao.js";
-import { icone, pinSvg, iconePaths, jangadaSvg } from "./icons.js";
+import { icone, seloSvg, glifoPaths, jangadaSvg } from "./icons.js";
 import { FOTOS } from "./fotos.js";
 import { lerCondicoes, linhasCondicoes, conselhos, nivelAcesso, TEXTO_ACESSO } from "./condicoes.js";
 import { ACESSIBILIDADE } from "./acessibilidade.js";
 import { resumoPassaporte, selosNovos, anguloCarimbo, nomeCurto } from "./passaporte.js";
 import { CONFIG } from "./config.js";
+import { EVENTOS, AGENDAS_AO_VIVO } from "./eventos.js";
+import { hojeFortaleza, organizarAgenda, proximoDestaque, rotuloQuando, faltam, diasEntre, gerarIcs } from "./agenda.js";
 
 /* ---------- utilidades e estado ---------- */
 const $ = (s) => document.querySelector(s);
@@ -53,21 +55,25 @@ const camadaRota = L.layerGroup().addTo(mapa);
 let marcadorVoce = null;
 const marcadores = new Map(); // id -> marker (só mexe no que mudou: mais fluido)
 
-const iconePin = (p, sel) => L.divIcon({
-  className: `pin ${p._osm ? "osm" : ""}`, iconSize: sel ? [40, 50] : [32, 40], iconAnchor: sel ? [20, 50] : [16, 40],
-  html: pinSvg(catDe(p), corDe(p), sel),
-});
+// o selo é redondo e o ponto exato do lugar é o centro dele (por isso a âncora fica no meio)
+const iconePin = (p, sel) => {
+  const tam = sel ? 54 : 38;
+  return L.divIcon({
+    className: `pin ${p._osm ? "osm" : ""}`, iconSize: [tam, tam], iconAnchor: [tam / 2, tam / 2],
+    html: seloSvg(catDe(p), corDe(p), sel, !!estado.passaporte[p.id]),
+  });
+};
 
 function sincronizarMarcadores() {
   const ids = new Set(resultados.map((p) => p.id));
   for (const [id, m] of marcadores) if (!ids.has(id)) { camadaLugares.removeLayer(m); marcadores.delete(id); }
   for (const p of resultados) {
-    const sel = p.id === estado.selecionado;
+    const sel = p.id === estado.selecionado, vis = !!estado.passaporte[p.id];
     let m = marcadores.get(p.id);
     if (!m) {
       m = L.marker([p.lat, p.lon], { icon: iconePin(p, sel), title: p.nome, keyboard: false }).on("click", () => abrirDetalhe(p.id)).addTo(camadaLugares);
-      m._sel = sel; marcadores.set(p.id, m);
-    } else if (m._sel !== sel) { m.setIcon(iconePin(p, sel)); m._sel = sel; }
+      m._sel = sel; m._vis = vis; marcadores.set(p.id, m);
+    } else if (m._sel !== sel || m._vis !== vis) { m.setIcon(iconePin(p, sel)); m._sel = sel; m._vis = vis; }
     m.setZIndexOffset(sel ? 1000 : 0);
   }
 }
@@ -98,6 +104,7 @@ function atualizarContadores() {
 function renderAba(nome) {
   if (nome === "lista") renderLista();
   else if (nome === "roteiro") renderRoteiro();
+  else if (nome === "agenda") renderAgenda();
   else if (nome === "passaporte") renderPassaporte();
 }
 function render() {
@@ -109,7 +116,7 @@ function render() {
   resultados = buscar(todos(), { ...estado, filtro });
   sincronizarMarcadores();
   selVisual = estado.selecionado;
-  atualizarContadores(); renderRelatos(); renderChips();
+  atualizarContadores(); atualizarAvisoAgenda(); renderRelatos(); renderChips();
   $("#n-lista").textContent = resultados.length;
   renderAba(abaAtiva); // só a aba que está aberta; as outras são refeitas quando a pessoa troca de aba
 }
@@ -232,6 +239,56 @@ function renderRoteiro() {
   alvo._ordem = ordem; alvo._total = totalKm;
 }
 
+/* ---------- agenda de eventos ---------- */
+function eventoHtml(ev, hoje) {
+  const cor = (CATEGORIAS[ev.categoria] ?? CATEGORIAS.lazer).cor;
+  const rolando = ev.inicio && hoje >= ev.inicio && hoje <= (ev.fim ?? ev.inicio);
+  const etiqueta = rolando ? "Acontecendo agora" : ev.inicio ? faltam(diasEntre(hoje, ev.inicio)) : "";
+  const lugares = (ev.lugarIds ?? []).map(porId).filter(Boolean);
+  return `<article class="evento" style="--c:${cor}">
+    <p class="cat">${esc(rotuloQuando(ev))}${etiqueta ? ` · <b>${etiqueta}</b>` : ""}</p>
+    <h3>${esc(ev.nome)}</h3>
+    <p>${esc(ev.descricao)}</p>
+    <p class="evento-meta">${esc(ev.local)} · ${esc(ev.preco)}${ev.confirmado ? "" : " · datas a confirmar"}</p>
+    <div class="linha">
+      ${ev.inicio ? `<button class="btn fino" data-ics="${esc(ev.id)}">${icone("evento", 16)}Adicionar ao calendário</button>` : ""}
+      ${lugares.map((p) => `<button class="btn fino" data-id="${esc(p.id)}">Ver ${esc(p.nome)} no mapa</button>`).join("")}
+      <a class="btn fino" href="${esc(ev.link)}" target="_blank" rel="noopener">Fonte: ${esc(ev.fonte)}</a>
+    </div>
+  </article>`;
+}
+
+function renderAgenda() {
+  const hoje = hojeFortaleza();
+  const g = organizarAgenda(EVENTOS, hoje);
+  const bloco = (titulo, lista) => lista.length ? `<h4 class="sec">${titulo}</h4>${lista.map((e) => eventoHtml(e, hoje)).join("")}` : "";
+  const nenhum = !g.acontecendo.length && !g.proximos.length && !g.sazonais.length;
+  $("#aba-agenda").innerHTML = (nenhum ? vazioHtml("Nenhum evento cadastrado para as próximas datas. Veja a agenda ao vivo abaixo.") : "")
+    + bloco("Acontecendo agora", g.acontecendo) + bloco("Próximos", g.proximos) + bloco("Em breve, datas a confirmar", g.sazonais)
+    + `<h4 class="sec">Agenda completa, ao vivo</h4>
+       <p class="evento-meta" style="margin:0 0 8px">Shows, teatro e festas mudam toda semana. Estes sites mostram tudo o que está marcado:</p>
+       <ul class="ao-vivo">${AGENDAS_AO_VIVO.map((a) => `<li><a href="${esc(a.url)}" target="_blank" rel="noopener"><b>${esc(a.nome)}</b><small>${esc(a.desc)}</small></a></li>`).join("")}</ul>`;
+}
+
+// aviso no topo da lista quando um evento confirmado está perto (ou rolando)
+function atualizarAvisoAgenda() {
+  const d = proximoDestaque(EVENTOS, hojeFortaleza());
+  const el = $("#aviso-agenda");
+  el.hidden = !d;
+  if (d) el.innerHTML = `${icone("evento", 16)}<span><b>${esc(d.ev.nome)}</b> ${d.agora ? "está acontecendo" : `começa ${faltam(d.dias)}`}</span><u>Ver agenda</u>`;
+}
+
+function baixarIcs(id) {
+  const ev = EVENTOS.find((e) => e.id === id);
+  const texto = ev && gerarIcs(ev);
+  if (!texto) return;
+  const url = URL.createObjectURL(new Blob([texto], { type: "text/calendar;charset=utf-8" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: `${id}.ics` });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Arquivo do calendário baixado");
+}
+
 /* ---------- passaporte: carimbo por lugar visitado, selos por conquista ---------- */
 function carimboSvg(p) {
   const ts = estado.passaporte[p.id];
@@ -239,7 +296,7 @@ function carimboSvg(p) {
   return `<svg class="carimbo ${ts ? "on" : "off"}" style="--c:${corDe(p)};transform:rotate(${ts ? anguloCarimbo(p.id) : 0}deg)" viewBox="0 0 100 100" aria-hidden="true">
     <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3" ${ts ? "" : 'stroke-dasharray="5 4"'}/>
     <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.5 3"/>
-    <svg x="32" y="19" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconePaths(catDe(p))}</svg>
+    <svg x="31" y="18" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">${glifoPaths(catDe(p))}</svg>
     <text x="50" y="68" text-anchor="middle" font-family="Young Serif, Georgia, serif" font-weight="400" font-size="7.2" fill="currentColor">${esc(nomeCurto(p.nome))}</text>
     ${data ? `<text x="50" y="79" text-anchor="middle" font-family="Atkinson Hyperlegible, sans-serif" font-weight="600" font-size="7" fill="currentColor">${data}</text>` : ""}
   </svg>`;
@@ -843,6 +900,13 @@ function aoClicarCards(e) {
   const card = e.target.closest(".item"); if (card) abrirDetalhe(card.dataset.id);
 }
 $("#aba-lista").addEventListener("click", aoClicarCards);
+$("#aba-agenda").addEventListener("click", (e) => {
+  const ics = e.target.closest("[data-ics]");
+  if (ics) return baixarIcs(ics.dataset.ics);
+  const b = e.target.closest("button[data-id]");
+  if (b) abrirDetalhe(b.dataset.id);
+});
+$("#aviso-agenda").addEventListener("click", () => document.querySelector('.abas [data-aba="agenda"]').click());
 $("#aba-passaporte").addEventListener("click", (e) => { const b = e.target.closest("button[data-id]"); if (b) abrirDetalhe(b.dataset.id); });
 $("#aba-roteiro").addEventListener("click", async (e) => {
   const el = $("#aba-roteiro");
@@ -876,7 +940,7 @@ $("#aba-lista").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.
 
 document.querySelectorAll(".abas [data-aba]").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll(".abas [data-aba]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
-  for (const a of ["lista", "roteiro", "passaporte", "relatos"]) $(`#aba-${a}`).hidden = a !== b.dataset.aba;
+  for (const a of ["lista", "roteiro", "agenda", "passaporte", "relatos"]) $(`#aba-${a}`).hidden = a !== b.dataset.aba;
   abaAtiva = b.dataset.aba;
   renderAba(abaAtiva);
   $(".conteudo").scrollTop = 0;

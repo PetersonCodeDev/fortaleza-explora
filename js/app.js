@@ -2,7 +2,7 @@ import { DADOS, CATEGORIAS, ROTEIROS } from "./data.js";
 import { buscar, sugestoes, montarRoteiro, aberto, haversine, norm, formatarDistancia, formatarDuracao, horarioTexto, esc } from "./search.js";
 import { horasDoSol, horaPorDoSol, periodo, estaChovendo, sugestaoAgora, luzDourada, hhmm } from "./agora.js";
 import { gerarCartao } from "./cartao.js";
-import { icone, seloSvg, glifoPaths, jangadaSvg } from "./icons.js";
+import { icone, pinSvg, iconePaths, jangadaSvg } from "./icons.js";
 import { FOTOS } from "./fotos.js";
 import { lerCondicoes, linhasCondicoes, conselhos, nivelAcesso, TEXTO_ACESSO } from "./condicoes.js";
 import { ACESSIBILIDADE } from "./acessibilidade.js";
@@ -55,28 +55,38 @@ const camadaRota = L.layerGroup().addTo(mapa);
 let marcadorVoce = null;
 const marcadores = new Map(); // id -> marker (só mexe no que mudou: mais fluido)
 
-// o selo é redondo e o ponto exato do lugar é o centro dele (por isso a âncora fica no meio)
-const iconePin = (p, sel) => {
-  const tam = sel ? 54 : 38;
-  return L.divIcon({
-    className: `pin ${p._osm ? "osm" : ""}`, iconSize: [tam, tam], iconAnchor: [tam / 2, tam / 2],
-    html: seloSvg(catDe(p), corDe(p), sel, !!estado.passaporte[p.id]),
-  });
-};
+const iconePin = (p, sel) => L.divIcon({
+  className: `pin ${p._osm ? "osm" : ""}`, iconSize: sel ? [40, 50] : [32, 40], iconAnchor: sel ? [20, 50] : [16, 40],
+  html: pinSvg(catDe(p), corDe(p), sel),
+});
+
+// Mapa menos cheio: sem filtro nem busca, só os lugares mais bem avaliados aparecem de longe, e o resto vai
+// surgindo conforme a pessoa dá zoom. Quando ela busca ou filtra, mostra tudo o que combinou.
+const LIMITE_POR_ZOOM = (z) => (z <= 11 ? 5 : z === 12 ? 8 : z === 13 ? 22 : z === 14 ? 44 : Infinity);
+function lugaresNoMapa() {
+  const filtrando = estado.q.trim() || estado.categoria !== "todas" || estado.usarAgora || estado.apenasAcessivel || estado.apenasAbertos || estado.apenasGratis || estado.raioKm;
+  const limite = filtrando ? Infinity : LIMITE_POR_ZOOM(mapa.getZoom());
+  if (resultados.length <= limite) return resultados;
+  const fixos = new Set([estado.selecionado, ...estado.favoritos, ...estado.roteiro]);
+  const melhores = new Set([...resultados].sort((a, b) => (b.nota ?? 0) - (a.nota ?? 0)).slice(0, limite).map((p) => p.id));
+  return resultados.filter((p) => melhores.has(p.id) || fixos.has(p.id));
+}
 
 function sincronizarMarcadores() {
-  const ids = new Set(resultados.map((p) => p.id));
+  const visiveis = lugaresNoMapa();
+  const ids = new Set(visiveis.map((p) => p.id));
   for (const [id, m] of marcadores) if (!ids.has(id)) { camadaLugares.removeLayer(m); marcadores.delete(id); }
-  for (const p of resultados) {
-    const sel = p.id === estado.selecionado, vis = !!estado.passaporte[p.id];
+  for (const p of visiveis) {
+    const sel = p.id === estado.selecionado;
     let m = marcadores.get(p.id);
     if (!m) {
       m = L.marker([p.lat, p.lon], { icon: iconePin(p, sel), title: p.nome, keyboard: false }).on("click", () => abrirDetalhe(p.id)).addTo(camadaLugares);
-      m._sel = sel; m._vis = vis; marcadores.set(p.id, m);
-    } else if (m._sel !== sel || m._vis !== vis) { m.setIcon(iconePin(p, sel)); m._sel = sel; m._vis = vis; }
+      m._sel = sel; marcadores.set(p.id, m);
+    } else if (m._sel !== sel) { m.setIcon(iconePin(p, sel)); m._sel = sel; }
     m.setZIndexOffset(sel ? 1000 : 0);
   }
 }
+mapa.on("zoomend", () => sincronizarMarcadores());
 
 /* avisos curtos: só para confirmar ou avisar erro (nada de pop-up no meio da tela) */
 function toast(msg, ms = 2600) {
@@ -296,7 +306,7 @@ function carimboSvg(p) {
   return `<svg class="carimbo ${ts ? "on" : "off"}" style="--c:${corDe(p)};transform:rotate(${ts ? anguloCarimbo(p.id) : 0}deg)" viewBox="0 0 100 100" aria-hidden="true">
     <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3" ${ts ? "" : 'stroke-dasharray="5 4"'}/>
     <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.5 3"/>
-    <svg x="31" y="18" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">${glifoPaths(catDe(p))}</svg>
+    <svg x="32" y="19" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconePaths(catDe(p))}</svg>
     <text x="50" y="68" text-anchor="middle" font-family="Young Serif, Georgia, serif" font-weight="400" font-size="7.2" fill="currentColor">${esc(nomeCurto(p.nome))}</text>
     ${data ? `<text x="50" y="79" text-anchor="middle" font-family="Atkinson Hyperlegible, sans-serif" font-weight="600" font-size="7" fill="currentColor">${data}</text>` : ""}
   </svg>`;

@@ -37,14 +37,14 @@
   </header>
 
   <section id="marcadores">
-    <h2>Marcadores do mapa: selos</h2>
-    <p class="sub">Cada categoria tem um símbolo próprio, tirado da cultura da cidade, dentro de um selo recortado (a mesma forma do carimbo do passaporte). O centro do selo é a posição exata do lugar. Três estados: normal, aberto (maior, com aro laranja) e já visitado (bolinha com check).</p>
+    <h2>Marcadores do mapa</h2>
+    <p class="sub">Um pin por categoria, na cor da categoria e com um ícone de traço. O mapa mostra só os lugares mais bem avaliados de longe e vai revelando os outros conforme o zoom, para não ficar poluído. O lugar aberto ganha um pin maior.</p>
     <div class="grade" id="grade-marcadores"></div>
   </section>
 
   <section id="no-mapa">
     <h2>Como aparecem juntos</h2>
-    <p class="sub">Selos próximos no mapa, com o lugar aberto em destaque.</p>
+    <p class="sub">Pins próximos no mapa, com o lugar aberto em destaque.</p>
     <div class="mapa-falso" id="mapa-falso"></div>
   </section>
 
@@ -88,29 +88,26 @@
 
 <script type="module">
   import { CATEGORIAS } from "../js/data.js";
-  import { seloSvg, glifoPaths, jangadaSvg, icone } from "../js/icons.js";
+  import { pinSvg, iconePaths, jangadaSvg, icone } from "../js/icons.js";
   const $ = (s) => document.querySelector(s);
-  const NOMES = { praia: "Jangada", historia: "Muralha e portão", cultura: "Máscara de teatro", gastronomia: "Caju", natureza: "Carnaúba", lazer: "Pipa de kitesurf", noite: "Lua e estrela", compras: "Sacola" };
-
+  
   $("#grade-marcadores").innerHTML = Object.entries(CATEGORIAS).map(([id, c]) => `
     <div class="cartao">
-      <b>${c.nome}</b><small>${NOMES[id]} · ${c.cor}</small>
+      <b>${c.nome}</b><small>${c.cor}</small>
       <div class="lado" style="gap:10px">
-        <div style="zoom:2">${seloSvg(id, c.cor)}</div>
-        <div style="zoom:1">${seloSvg(id, c.cor, false)}</div>
-        <div style="zoom:1">${seloSvg(id, c.cor, true)}</div>
-        <div style="zoom:1">${seloSvg(id, c.cor, false, true)}</div>
+        <div>${pinSvg(id, c.cor, false)}</div>
+        <div>${pinSvg(id, c.cor, true)}</div>
       </div>
     </div>`).join("");
 
   const cats = Object.entries(CATEGORIAS);
-  $("#mapa-falso").innerHTML = cats.map(([id, c], i) => `<div style="margin-top:${(i % 3) * 8}px">${seloSvg(id, c.cor, i === 2, i === 5)}</div>`).join("");
+  $("#mapa-falso").innerHTML = cats.map(([id, c], i) => `<div style="margin-top:${(i % 3) * 8}px">${pinSvg(id, c.cor, i === 2)}</div>`).join("");
 
   $("#carimbos-guia").innerHTML = cats.flatMap(([id, c]) => [true, false].map((on) => `
     <svg class="carimbo ${on ? "on" : "off"}" style="--c:${c.cor};transform:rotate(${on ? (id.length % 7) - 3 : 0}deg)" viewBox="0 0 100 100" width="104" height="104" aria-hidden="true">
       <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3" ${on ? "" : 'stroke-dasharray="5 4"'}/>
       <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.5 3"/>
-      <svg x="31" y="25" width="38" height="38" viewBox="0 0 24 24" fill="currentColor">${glifoPaths(id)}</svg>
+      <svg x="32" y="26" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconePaths(id)}</svg>
       <text x="50" y="76" text-anchor="middle" font-family="Young Serif, Georgia, serif" font-size="8" fill="currentColor">${c.nome.toUpperCase()}</text>
     </svg>`)).join("");
 

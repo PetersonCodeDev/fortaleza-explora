@@ -306,7 +306,7 @@ _(Preencher conforme a regra da disciplina sobre uso de ferramentas de apoio. Es
 
 ## 20. Atualização de 29/10/2026: marcadores, agenda de eventos e guia visual
 
-**Marcadores do mapa ("selos").** Os pins genéricos foram trocados por selos recortados, a mesma forma do carimbo do passaporte. Cada categoria tem um símbolo próprio tirado da cidade: jangada (praias), muralha e portão (história), máscara de teatro (cultura), caju (gastronomia), carnaúba (natureza), pipa de kitesurf (lazer), lua e estrela (noite), sacola (compras). O centro do selo é a posição exata do lugar. Três estados: normal, aberto (maior, com aro laranja) e visitado (bolinha com check). Os símbolos ficam em `js/icons.js` (`glifoPaths`, `seloSvg`) e o mesmo desenho aparece no carimbo, então marcador e passaporte combinam.
+**Marcadores do mapa.** Testei um desenho novo (selos recortados com símbolos como caju e jangada), mas o autor preferiu os pins anteriores, e voltamos a eles. O que ficou foi uma melhora de **poluição visual**: sem busca nem filtro, o mapa mostra só os lugares mais bem avaliados quando está afastado (5 a 8 pins) e vai revelando os outros a cada zoom (22 no zoom 13, 44 no 14, todos a partir do 15). Lugar aberto, favoritos e itens do roteiro sempre aparecem. Quando a pessoa busca ou filtra, todos os resultados aparecem. A lista continua com os 65 lugares.
 
 **Agenda de eventos (nova aba).** Fica em `js/agenda.js` (funções puras: data de Fortaleza, estado do evento, ordenação, evento em destaque, arquivo `.ics`) e `js/eventos.js` (os dados). Decisões:
 - **Só entra o que foi conferido numa fonte.** Não existe API aberta e gratuita de eventos de Fortaleza, então a lista é curada à mão: Cine Ceará (7 a 13/11/2026), Réveillon (31/12), Carnaval 2027 (6 a 9/02) e Ceará Natal de Luz (datas de 2026 ainda sem divulgação, por isso aparece em "datas a confirmar"). Eventos que não consegui confirmar (como Fortal e festas juninas) ficaram de fora de propósito: é melhor ter pouco e certo do que muito e errado.
@@ -316,6 +316,6 @@ _(Preencher conforme a regra da disciplina sobre uso de ferramentas de apoio. Es
 - **Fuso:** "hoje" é sempre calculado no horário de Fortaleza, não no do aparelho. Testado também com `TZ=UTC`.
 - **Como manter:** copiar um bloco de `js/eventos.js`, trocar datas e `id`, rodar `npm test` (ele confere datas, links e se os lugares existem).
 
-**Guia visual** (`design/guia.html`, link no repositório): página gerada pelo próprio código do app, com marcadores nos 4 estados, carimbos, paleta, tipografia, ilustração e componentes. Serve de apoio para a equipe de design, porque sempre mostra o que está no ar.
+**Guia visual** (`design/guia.html`, link no repositório): página gerada pelo próprio código do app, com os pins, carimbos, paleta, tipografia, ilustração e componentes. Serve de apoio para a equipe de design, porque sempre mostra o que está no ar.
 
-**Testes e desempenho.** 40 testes (`npm test`), com 10 novos para a agenda. A medição de desempenho (`ferramentas/desempenho.mjs`, CPU 4x mais lenta) continua em 17 ms por quadro, com quase nenhum quadro lento, depois de cinco abas e selos novos. Limite honesto: não foi testado em celulares reais nem em iPhone.
+**Testes e desempenho.** 40 testes (`npm test`), com 10 novos para a agenda. A medição de desempenho (`ferramentas/desempenho.mjs`, CPU 4x mais lenta) continua em 17 ms por quadro, com quase nenhum quadro lento, depois de cinco abas. Limite honesto: não foi testado em celulares reais nem em iPhone.

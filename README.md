@@ -2,6 +2,12 @@
 
 Aplicativo web (PWA, funciona no celular e no computador) para **descobrir o que há de interessante em Fortaleza**, no estilo Waze: busca inteligente, mapa, rotas, relatos da comunidade e roteiro de passeio.
 
+## Posicionamento estratégico
+
+O produto deve permanecer **fortemente focado em Fortaleza** como proposta principal. A cidade é o centro de valor do app: a busca por experiência, clima, hora, cultura, praia, gastronomia e roteiro local.
+
+A expansão para o **Ceará** pode acontecer depois, como camada regional de destinos e passeios fora da capital, mas **sem diluir o foco principal da marca**. A identidade do projeto é ser o guia turístico de Fortaleza, e não um mapa genérico do mundo.
+
 Projeto integrado de duas disciplinas:
 - **Desenvolvimento Web** (prof. Juvenaldo): aplicativo web responsivo, PWA, consumo de APIs.
 - **Busca / Recuperação de Informação** (prof. "Montanha"): "montar um aplicativo de busca, tipo um Waze sobre o que se tem de interessante em Fortaleza".

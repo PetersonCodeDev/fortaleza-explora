@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DADOS } from "../js/data.js";
-import { norm, haversine, levenshtein, score, buscar, aberto, montarRoteiro, sugestoes, formatarDistancia } from "../js/search.js";
+import { norm, haversine, levenshtein, score, buscar, aberto, montarRoteiro, sugestoes, formatarDistancia, bairrosFortaleza } from "../js/search.js";
 
 test("norm remove acentos e caixa", () => assert.equal(norm("  Praça do FERREIRA "), "praca do ferreira"));
 
@@ -18,6 +18,12 @@ test("busca tolera erro de digitação", () => assert.equal(buscar(DADOS, { q: "
 test("sinônimo: 'comer' encontra gastronomia", () => assert.ok(buscar(DADOS, { q: "comer" }).some((p) => p.categoria === "gastronomia")));
 test("termos são AND", () => assert.equal(buscar(DADOS, { q: "museu xyzabc" }).length, 0));
 test("filtro de categoria", () => assert.ok(buscar(DADOS, { categoria: "praia" }).every((p) => p.categoria === "praia")));
+test("filtro por bairro e bairros principais", () => {
+  const bairros = bairrosFortaleza(DADOS);
+  assert.ok(bairros.includes("Centro"));
+  assert.ok(bairros.includes("Praia de Iracema"));
+  assert.ok(buscar(DADOS, { bairro: "Praia de Iracema" }).every((p) => p.bairro === "Praia de Iracema"));
+});
 test("filtro grátis", () => assert.ok(buscar(DADOS, { apenasGratis: true }).every((p) => p.preco === 0)));
 
 test("raio e ordenação por distância", () => {

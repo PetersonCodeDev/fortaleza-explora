@@ -1,5 +1,5 @@
 import { DADOS, CATEGORIAS, ROTEIROS } from "./data.js";
-import { buscar, sugestoes, montarRoteiro, aberto, haversine, norm, formatarDistancia, formatarDuracao, horarioTexto, esc } from "./search.js";
+import { buscar, sugestoes, montarRoteiro, aberto, haversine, norm, formatarDistancia, formatarDuracao, horarioTexto, esc, bairrosFortaleza } from "./search.js";
 import { horasDoSol, horaPorDoSol, periodo, estaChovendo, sugestaoAgora, luzDourada, hhmm } from "./agora.js";
 import { gerarCartao } from "./cartao.js";
 import { icone, pinSvg, iconePaths, jangadaSvg } from "./icons.js";
@@ -14,6 +14,8 @@ import { hojeFortaleza, organizarAgenda, proximoDestaque, rotuloQuando, faltam, 
 /* ---------- utilidades e estado ---------- */
 const $ = (s) => document.querySelector(s);
 const CENTRO = { lat: -3.7319, lon: -38.5267 };
+const REGIAO_FORTALEZA = { minLat: -3.9, maxLat: -3.52, minLon: -38.8, maxLon: -38.3 };
+const dentroDaRegiaoFortaleza = (p) => p && p.lat >= REGIAO_FORTALEZA.minLat && p.lat <= REGIAO_FORTALEZA.maxLat && p.lon >= REGIAO_FORTALEZA.minLon && p.lon <= REGIAO_FORTALEZA.maxLon;
 const TIPOS_RELATO = {
   lotado: { nome: "Lotado", icone: "lotado" },
   fechado: { nome: "Fechado ou interditado", icone: "fechado" },
@@ -29,8 +31,8 @@ const ler = (k, padrao) => { try { return JSON.parse(localStorage.getItem(k)) ??
 const minAtras = (ts) => Math.max(1, Math.round((Date.now() - ts) / 60000));
 
 const estado = {
-  q: "", categoria: "todas", ordenar: "relevancia", raioKm: 0, apenasAbertos: false, apenasGratis: false, apenasAcessivel: false,
-  origem: null, extras: ler("fx_osm", []), selecionado: null, modoRelato: false, limite: POR_PAGINA,
+  q: "", categoria: "todas", bairro: "todos", ordenar: "relevancia", raioKm: 0, apenasAbertos: false, apenasGratis: false, apenasAcessivel: false,
+  origem: null, extras: ler("fx_osm", []).filter(dentroDaRegiaoFortaleza), selecionado: null, modoRelato: false, limite: POR_PAGINA,
   agora: { por: null, chovendo: false, temp: null, sugestao: null }, usarAgora: false,
   gaveta: "meio", gavetaAntes: "meio", buscandoOnline: false, buscasOnline: new Set(), guia: null,
   passaporte: ler("fx_passaporte", {}),
@@ -38,13 +40,19 @@ const estado = {
   roteiro: ler("fx_roteiro", []),
   relatos: ler("fx_relatos", []).filter((r) => Date.now() - r.ts < TTL_RELATO_MS),
 };
-const todos = () => [...DADOS, ...estado.extras];
+const todos = () => [...DADOS, ...estado.extras].filter(dentroDaRegiaoFortaleza);
 const porId = (id) => todos().find((p) => p.id === id);
 const corDe = (p) => (CATEGORIAS[p.categoria] ?? CATEGORIAS.lazer).cor;
 const catDe = (p) => (CATEGORIAS[p.categoria] ? p.categoria : "lazer");
 
 /* ---------- mapa ---------- */
-const mapa = L.map("map", { zoomControl: false }).setView([-3.74, -38.5], 12);
+const mapa = L.map("map", {
+  zoomControl: false,
+  minZoom: 10,
+  maxZoom: 15,
+  maxBounds: [[REGIAO_FORTALEZA.minLat, REGIAO_FORTALEZA.minLon], [REGIAO_FORTALEZA.maxLat, REGIAO_FORTALEZA.maxLon]],
+  maxBoundsViscosity: 1.0,
+}).setView([-3.74, -38.5], 12);
 L.control.zoom({ position: "bottomright" }).addTo(mapa);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -120,13 +128,12 @@ function renderAba(nome) {
 function render() {
   salvarOsm();
   const filtros = [];
-  if (estado.usarAgora && estado.agora.sugestao?.pred) filtros.push(estado.agora.sugestao.pred);
   if (estado.apenasAcessivel) filtros.push((p) => ["sim", "parcial"].includes(acessoDe(p)));
   const filtro = filtros.length ? (p) => filtros.every((f) => f(p)) : null;
-  resultados = buscar(todos(), { ...estado, filtro });
+  resultados = buscar(todos(), { ...estado, bairro: estado.bairro, filtro });
   sincronizarMarcadores();
   selVisual = estado.selecionado;
-  atualizarContadores(); atualizarAvisoAgenda(); renderRelatos(); renderChips();
+  atualizarContadores(); atualizarAvisoAgenda(); renderRelatos(); renderChips(); renderBairrosHome(); renderRoteirosHome(); renderBannerEvento(); renderDestaquesCulturais();
   $("#n-lista").textContent = resultados.length;
   renderAba(abaAtiva); // só a aba que está aberta; as outras são refeitas quando a pessoa troca de aba
 }
@@ -150,16 +157,92 @@ function marcarSelecionado() {
 }
 
 function renderChips() {
-  const s = estado.agora.sugestao;
   const itens = [];
-  if (s) itens.push(`<button class="chip agora" data-agora aria-pressed="${estado.usarAgora}">${icone(s.icone, 16)}${esc(s.rotulo)}</button>`);
   itens.push(`<button class="chip" data-cat="todas" aria-pressed="${estado.categoria === "todas"}">Tudo</button>`);
   for (const [id, c] of Object.entries(CATEGORIAS))
     itens.push(`<button class="chip" style="--c:${c.cor}" data-cat="${id}" aria-pressed="${estado.categoria === id}"><span class="ponto"></span>${c.nome}</button>`);
+  const bairros = bairrosFortaleza(todos()).slice(0, 6);
+  if (bairros.length) {
+    itens.push(`<button class="chip sep" data-bairro="todos" aria-pressed="${estado.bairro === "todos"}">Todos os bairros</button>`);
+    for (const bairro of bairros) {
+      itens.push(`<button class="chip" data-bairro="${esc(bairro)}" aria-pressed="${estado.bairro === bairro}"><span class="ponto"></span>${esc(bairro)}</button>`);
+    }
+  }
   itens.push(`<button class="chip sep" data-flag="apenasAbertos" aria-pressed="${estado.apenasAbertos}">Aberto agora</button>`);
   itens.push(`<button class="chip" data-flag="apenasGratis" aria-pressed="${estado.apenasGratis}">Grátis</button>`);
   itens.push(`<button class="chip" data-flag="apenasAcessivel" aria-pressed="${estado.apenasAcessivel}">${icone("acessivel", 16)}Acessível</button>`);
   $("#chips").innerHTML = itens.join("");
+}
+
+function renderBairrosHome() {
+  const lista = document.querySelector("#bairros-fortaleza-lista");
+  if (!lista) return;
+  const bairros = bairrosFortaleza(todos(), 4);
+  const destaques = bairros.map((bairro) => {
+    const lugares = todos().filter((p) => p.bairro === bairro).length;
+    return `<button class="bairro-card" type="button" data-bairro="${esc(bairro)}" aria-label="Filtrar por ${esc(bairro)}">
+      <strong>${esc(bairro)}</strong>
+      <small>${lugares} lugares · Fortaleza</small>
+    </button>`;
+  }).join("");
+  lista.innerHTML = destaques || "";
+}
+
+function renderRoteirosHome() {
+  const lista = document.querySelector("#roteiros-fortaleza-lista");
+  if (!lista) return;
+  const destaques = ROTEIROS.slice(0, 3).map((roteiro) => `
+    <article class="roteiro-card" aria-label="${esc(roteiro.nome)}">
+      <small>${esc(roteiro.tempo)}</small>
+      <strong>${esc(roteiro.nome)}</strong>
+      <p>${esc(roteiro.desc)}</p>
+      <button class="btn pri" type="button" data-roteiro="${esc(roteiro.id)}">${icone("mais", 16)}Usar roteiro</button>
+    </article>
+  `).join("");
+  lista.innerHTML = destaques;
+}
+
+function renderBannerEvento() {
+  const banner = document.querySelector("#banner-evento");
+  if (!banner) return;
+  const destaque = proximoDestaque(EVENTOS, hojeFortaleza(), 21);
+  if (!destaque) {
+    banner.hidden = true;
+    return;
+  }
+  const nome = document.querySelector("#banner-evento-nome");
+  const texto = document.querySelector("#banner-evento-texto");
+  if (nome) nome.textContent = destaque.ev.nome;
+  if (texto) texto.textContent = destaque.agora ? "Está acontecendo agora em Fortaleza" : `Começa ${faltam(destaque.dias)} · ${destaque.ev.local}`;
+  banner.hidden = false;
+}
+
+function renderDestaquesCulturais() {
+  const lista = document.querySelector("#destaques-culturais");
+  if (!lista) return;
+  const destaquesEvento = EVENTOS.filter((ev) => ev.confirmado || ev.inicio).slice(0, 2).map((ev) => {
+    const local = (ev.lugarIds ?? []).map(porId).filter(Boolean)[0];
+    return `
+      <button class="cultura-card evento" type="button" data-evento-id="${esc(ev.id)}">
+        <span class="tag">Evento</span>
+        <strong>${esc(ev.nome)}</strong>
+        <small>${esc(ev.local)}</small>
+        <p>${esc(ev.descricao.slice(0, 110))}${ev.descricao.length > 110 ? "…" : ""}</p>
+        <b>${esc(ev.confirmado ? "Confira agora" : "Em breve")}</b>
+        ${local ? `<span class="mini-link">Ver ${esc(local.nome)}</span>` : ""}
+      </button>
+    `;
+  }).join("");
+  const destaquesLugar = DADOS.filter((p) => p.categoria === "cultura").slice(0, 3).map((p) => `
+    <button class="cultura-card lugar" type="button" data-lugar-id="${esc(p.id)}">
+      <span class="tag">Lugar</span>
+      <strong>${esc(p.nome)}</strong>
+      <small>${esc(p.bairro || "Fortaleza")}</small>
+      <p>${esc((p.descricao || "Experiência cultural e histórica da cidade.").slice(0, 110))}${(p.descricao || "Experiência cultural e histórica da cidade.").length > 110 ? "…" : ""}</p>
+      <b>Descobrir</b>
+    </button>
+  `).join("");
+  lista.innerHTML = `${destaquesEvento}${destaquesLugar}`;
 }
 
 function statusAberto(p) {
@@ -692,6 +775,7 @@ function incorporar(elementos, tagsExtra = [], bonus = 0) {
     const lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
     const t = el.tags ?? {};
     if (lat == null || !t.name) continue;
+    if (!dentroDaRegiaoFortaleza({ lat, lon })) continue;
     const id = `osm-${el.type}-${el.id}`;
     if (base.some((p) => p.id === id || (haversine(p, { lat, lon }) < 0.08 && norm(p.nome).includes(norm(t.name).slice(0, 6))))) continue;
     const lugar = {
@@ -878,6 +962,103 @@ $("#sugestoes").addEventListener("click", (e) => {
   if (li.dataset.tipo === "lugar") abrirDetalhe(li.dataset.id);
 });
 document.addEventListener("click", (e) => { if (!e.target.closest(".busca")) $("#sugestoes").hidden = true; });
+document.addEventListener("click", (e) => {
+  const botoes = e.target.closest("[data-explore]");
+  if (!botoes) return;
+  const mapaExplore = {
+    praia: { categoria: "praia", q: "praia" },
+    cultura: { categoria: "cultura", q: "museu" },
+    gastronomia: { categoria: "gastronomia", q: "comer" },
+    noite: { categoria: "noite", q: "noite" },
+  };
+  const cfg = mapaExplore[botoes.dataset.explore];
+  if (!cfg) return;
+  estado.q = cfg.q;
+  estado.categoria = cfg.categoria;
+  estado.usarAgora = false;
+  estado.apenasAbertos = false;
+  estado.apenasGratis = false;
+  estado.apenasAcessivel = false;
+  caixa.value = cfg.q;
+  const ul = $("#sugestoes");
+  ul.hidden = true;
+  render();
+  if (celular()) definirGaveta("meio");
+  enquadrarResultados();
+});
+
+document.querySelector("#bairros-fortaleza-lista")?.addEventListener("click", (e) => {
+  const bairro = e.target.closest("[data-bairro]")?.dataset.bairro;
+  if (!bairro) return;
+  estado.bairro = estado.bairro === bairro ? "todos" : bairro;
+  estado.categoria = "todas";
+  render();
+  if (celular()) definirGaveta("meio");
+  enquadrarResultados();
+});
+
+document.addEventListener("click", (e) => {
+  const botao = e.target.closest("[data-visitor]");
+  if (!botao) return;
+  const mapaPerfil = {
+    casal: { categoria: "praia", q: "por do sol", usarAgora: false },
+    familia: { categoria: "natureza", q: "familia", usarAgora: false },
+    cultura: { categoria: "cultura", q: "museu", usarAgora: false },
+    chuva: { categoria: "todas", q: "chuva", usarAgora: true },
+  };
+  const cfg = mapaPerfil[botao.dataset.visitor];
+  if (!cfg) return;
+  estado.q = cfg.q;
+  estado.categoria = cfg.categoria;
+  estado.usarAgora = cfg.usarAgora;
+  estado.apenasAbertos = false;
+  estado.apenasGratis = false;
+  estado.apenasAcessivel = false;
+  caixa.value = cfg.q;
+  const ul = $("#sugestoes");
+  ul.hidden = true;
+  render();
+  if (celular()) definirGaveta("meio");
+  if (cfg.usarAgora) {
+    estado.agora.sugestao = sugestaoAgora({ periodo: periodo(new Date(), estado.agora.por), chovendo: estado.agora.chovendo, porDoSol: estado.agora.por });
+  }
+  enquadrarResultados();
+});
+
+document.addEventListener("click", (e) => {
+  const botao = e.target.closest("[data-roteiro]");
+  if (!botao) return;
+  const roteiro = ROTEIROS.find((r) => r.id === botao.dataset.roteiro);
+  if (!roteiro) return;
+  estado.roteiro = [...new Set([...estado.roteiro, ...roteiro.ids.filter(porId)])];
+  guardar("fx_roteiro", estado.roteiro);
+  estado.categoria = "todas";
+  estado.q = roteiro.nome;
+  caixa.value = roteiro.nome;
+  render();
+  document.querySelector('.abas [data-aba="roteiro"]').click();
+  if (celular()) definirGaveta("meio");
+  toast(`Roteiro “${roteiro.nome}” ativado`);
+});
+
+document.querySelector("#destaques-culturais")?.addEventListener("click", (e) => {
+  const evento = e.target.closest("[data-evento-id]");
+  if (evento) {
+    document.querySelector('.abas [data-aba="agenda"]').click();
+    return;
+  }
+  const lugar = e.target.closest("[data-lugar-id]");
+  if (lugar) {
+    abrirDetalhe(lugar.dataset.lugarId);
+  }
+});
+
+document.querySelector("#banner-evento")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-banner-evento]");
+  if (!btn) return;
+  document.querySelector('.abas [data-aba="agenda"]').click();
+});
+
 function enquadrarResultados() {
   const pts = resultados.slice(0, 80).map((p) => [p.lat, p.lon]);
   if (pts.length) mapa.fitBounds(pts, { padding: [50, 50], maxZoom: 15 });
@@ -894,9 +1075,11 @@ caixa.addEventListener("keydown", (e) => {
 $("#chips").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   estado.limite = POR_PAGINA;
-  if (b.hasAttribute("data-agora")) estado.usarAgora = !estado.usarAgora;
-  else if (b.dataset.flag) estado[b.dataset.flag] = !estado[b.dataset.flag];
+  if (b.dataset.flag) estado[b.dataset.flag] = !estado[b.dataset.flag];
   else if (b.dataset.cat) estado.categoria = estado.categoria === b.dataset.cat ? "todas" : b.dataset.cat;
+  else if (b.dataset.bairro) {
+    estado.bairro = estado.bairro === b.dataset.bairro ? "todos" : b.dataset.bairro;
+  }
   render();
 });
 $("#ordenar").onchange = (e) => { estado.ordenar = e.target.value; if (estado.ordenar === "distancia" && !estado.origem) localizar({ silencioso: true }); render(); };

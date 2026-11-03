@@ -83,6 +83,20 @@ function campos(p) {
   };
 }
 
+/** Bairros mais usados na base de Fortaleza para facilitar a navegação entre zonas e áreas do mapa. */
+export function bairrosFortaleza(lugares, limite = 6) {
+  const contagem = new Map();
+  for (const p of lugares) {
+    const bairro = (p.bairro ?? "").trim();
+    if (!bairro) continue;
+    contagem.set(bairro, (contagem.get(bairro) ?? 0) + 1);
+  }
+  return [...contagem.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"))
+    .slice(0, limite)
+    .map(([bairro]) => bairro);
+}
+
 /** Pontuação de relevância (0 = não casa). Combina correspondência exata, prefixo, sinônimos e erro de digitação. */
 export function score(place, consulta) {
   const q = norm(consulta);
@@ -156,10 +170,11 @@ export function aberto(horario, data = new Date()) {
  * opcoes: { q, categoria, origem, raioKm, apenasAbertos, apenasGratis, filtro(fn opcional), ordenar: 'relevancia'|'distancia'|'nota', data }
  */
 export function buscar(lugares, opcoes = {}) {
-  const { q = "", categoria = "todas", origem = null, raioKm = 0, apenasAbertos = false, apenasGratis = false, ordenar = "relevancia", data = new Date(), filtro = null } = opcoes;
+  const { q = "", categoria = "todas", bairro = "todos", origem = null, raioKm = 0, apenasAbertos = false, apenasGratis = false, ordenar = "relevancia", data = new Date(), filtro = null } = opcoes;
   const out = [];
   for (const p of lugares) {
     if (categoria !== "todas" && p.categoria !== categoria) continue;
+    if (bairro !== "todos" && p.bairro !== bairro) continue;
     if (apenasGratis && p.preco !== 0) continue;
     if (filtro && !filtro(p)) continue;
     if (apenasAbertos && aberto(p.horario, data) === false) continue;

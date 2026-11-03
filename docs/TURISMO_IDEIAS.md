@@ -2,6 +2,12 @@
 
 Estudo de viabilidade feito em 29/10/2026. Cada ideia diz o que precisa, o esforço e o que já foi feito.
 
+## Posicionamento base
+
+A proposta do produto deve continuar sendo **Fortaleza primeiro**. A cidade é o público, o caso de uso e o diferencial de narrativa. O Ceará pode entrar como expansão regional em uma segunda etapa, mas o produto principal precisa ser entendido como **guia turístico de Fortaleza** e não como mapa genérico do Brasil ou do mundo.
+
+Essa escolha ajuda a manter clareza de marca, melhor experiência para quem visita a capital e maior força no posicionamento em busca por “o que fazer em Fortaleza”.
+
 ## Já feito
 | Ideia | Situação |
 |---|---|

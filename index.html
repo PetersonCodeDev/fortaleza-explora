@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Fortaleza Explora</title>
-  <meta name="description" content="O que fazer em Fortaleza agora: lugares, rotas e avisos de quem está lá. Por Pedro Peterson.">
+  <meta name="description" content="Guia turístico de Fortaleza: o que fazer agora, lugares, clima, mapa e roteiros para aproveitar a cidade.">
   <meta name="author" content="Pedro Peterson">
   <meta name="theme-color" content="#0b6e72">
   <meta property="og:title" content="Fortaleza Explora">
-  <meta property="og:description" content="O que fazer em Fortaleza agora: lugares, rotas e avisos de quem está lá.">
+  <meta property="og:description" content="Guia turístico de Fortaleza: o que fazer agora, lugares, clima, mapa e roteiros para aproveitar a cidade.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:image" content="https://petersoncodedev.github.io/fortaleza-explora/icons/icon-512.png">
@@ -40,6 +40,204 @@
   </header>
 
   <nav class="chips" id="chips" aria-label="Categorias e atalhos"></nav>
+
+  <section id="banner-evento" class="banner-evento" hidden aria-live="polite">
+    <div class="banner-conteudo">
+      <span class="banner-tag">Evento próximo</span>
+      <div>
+        <strong id="banner-evento-nome">Cine Ceará</strong>
+        <small id="banner-evento-texto">Acontecendo agora em Fortaleza</small>
+      </div>
+    </div>
+    <button class="btn pri" type="button" data-banner-evento>Ver agenda</button>
+  </section>
+
+  <section class="editorial-hero" aria-label="Fortaleza em destaque">
+    <div class="editorial-copy">
+      <p class="eyebrow">Fortaleza, CE</p>
+      <h2>Sol, mar e cultura urbana em uma cidade que respira ao ar livre.</h2>
+      <p>Do pôr do sol na praia ao centro histórico e às noites de música, a cidade se vive melhor quando o visitante entende o ritmo dela.</p>
+      <div class="editorial-actions">
+        <button class="btn pri" type="button" data-explore="praia">Explorar praias</button>
+        <button class="btn sec" type="button" data-explore="cultura">Ver cultura</button>
+      </div>
+    </div>
+    <div class="editorial-aside" aria-hidden="true">
+      <span>Praia</span>
+      <strong>Iracema</strong>
+      <span>Centro</span>
+      <strong>Mercado Central</strong>
+      <span>Noite</span>
+      <strong>Dragão do Mar</strong>
+    </div>
+  </section>
+
+  <section class="explore-fortaleza" aria-label="Explore Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Guia turístico de Fortaleza</p>
+      <h2>Escolha como você quer viver a cidade</h2>
+    </div>
+    <div class="explore-grid">
+      <button class="explore-card" data-explore="praia" type="button">
+        <span aria-hidden="true">🌊</span>
+        <strong>Praia</strong>
+        <small>Sol, mar e pôr do sol</small>
+      </button>
+      <button class="explore-card" data-explore="cultura" type="button">
+        <span aria-hidden="true">🎨</span>
+        <strong>Cultura</strong>
+        <small>Museus, teatros e arte</small>
+      </button>
+      <button class="explore-card" data-explore="gastronomia" type="button">
+        <span aria-hidden="true">🍽️</span>
+        <strong>Comer</strong>
+        <small>Mercados e sabores locais</small>
+      </button>
+      <button class="explore-card" data-explore="noite" type="button">
+        <span aria-hidden="true">🌃</span>
+        <strong>Noite</strong>
+        <small>Bar, música e clima urbano</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="ritmo-fortaleza" aria-label="Ritmo de Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Fortaleza em movimento</p>
+      <h2>O ritmo da cidade em cada momento</h2>
+    </div>
+    <div class="ritmo-grid">
+      <button class="ritmo-card praia-ritmo" data-explore="praia" type="button">
+        <span aria-hidden="true">🌅</span>
+        <strong>Manhã de praia</strong>
+        <small>Mar, calçadão e sol em Iracema.</small>
+      </button>
+      <button class="ritmo-card centro-ritmo" data-bairro="Centro" type="button">
+        <span aria-hidden="true">🏛️</span>
+        <strong>Centro histórico</strong>
+        <small>Mercado, forte e arquitetura da cidade.</small>
+      </button>
+      <button class="ritmo-card cultura-ritmo" data-explore="cultura" type="button">
+        <span aria-hidden="true">🎭</span>
+        <strong>Arte e cultura</strong>
+        <small>Teatros, museus e memória local.</small>
+      </button>
+      <button class="ritmo-card noite-ritmo" data-explore="noite" type="button">
+        <span aria-hidden="true">🎵</span>
+        <strong>Noite em alta</strong>
+        <small>Dragão e a energia da cidade depois do pôr do sol.</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="fortaleza-cura" aria-label="Bairros e experiências de Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Fortaleza bem escolhida</p>
+      <h2>As áreas que mais contam a história da cidade</h2>
+    </div>
+    <div class="cura-grid">
+      <article class="cura-principal">
+        <span class="tag-local">Praia + pôr do sol</span>
+        <strong>Meireles e Iracema</strong>
+        <p>O melhor da cidade para caminhar, ver o mar e sentir o ritmo da vida de Fortaleza entre a faixa de areia e o calçadão.</p>
+        <button class="cura-btn" type="button" data-explore="praia">Explorar essa parte da cidade</button>
+      </article>
+      <div class="cura-mini">
+        <article class="cura-card">
+          <span class="tag-local">História</span>
+          <strong>Centro</strong>
+          <small>Mercado, forte, igreja e ruas que guardam a cidade.</small>
+        </article>
+        <article class="cura-card">
+          <span class="tag-local">Arte</span>
+          <strong>Dragão do Mar</strong>
+          <small>Arte, música e cultura em um dos principais polos da cidade.</small>
+        </article>
+        <article class="cura-card">
+          <span class="tag-local">Noite</span>
+          <strong>Praia de Iracema</strong>
+          <small>Uma paisagem urbana com clima mais vivo depois do fim do dia.</small>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="perfil-fortaleza" aria-label="Perfis de visitante em Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Para cada tipo de passeio</p>
+      <h2>O que combina com você hoje</h2>
+    </div>
+    <div class="perfil-grid">
+      <button class="perfil-card" data-visitor="casal" type="button">
+        <span aria-hidden="true">💑</span>
+        <strong>Casal</strong>
+        <small>Pôr do sol e clima romântico</small>
+      </button>
+      <button class="perfil-card" data-visitor="familia" type="button">
+        <span aria-hidden="true">👨‍👩‍👧‍👦</span>
+        <strong>Família</strong>
+        <small>Parques e passeios leves</small>
+      </button>
+      <button class="perfil-card" data-visitor="cultura" type="button">
+        <span aria-hidden="true">🏛️</span>
+        <strong>Cultura</strong>
+        <small>Museus e patrimônio da cidade</small>
+      </button>
+      <button class="perfil-card" data-visitor="chuva" type="button">
+        <span aria-hidden="true">☔</span>
+        <strong>Se chover</strong>
+        <small>Atividades cobertas e confortáveis</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="destaques-fortaleza" aria-label="Destaques de Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Fortaleza em destaque</p>
+      <h2>O melhor da cidade em três experiências</h2>
+    </div>
+    <div class="destaques-grid">
+      <article class="destaque-card destaque-mar">
+        <span aria-hidden="true">🌊</span>
+        <strong>Praia e sol</strong>
+        <p>Iracema, Meireles e Mucuripe: mar, calçadão e pôr do sol.</p>
+      </article>
+      <article class="destaque-card destaque-historia">
+        <span aria-hidden="true">🏛️</span>
+        <strong>Centro histórico</strong>
+        <p>Forte, Catedral, Mercado Central e ruas com história e cultura.</p>
+      </article>
+      <article class="destaque-card destaque-noite">
+        <span aria-hidden="true">🎵</span>
+        <strong>Noite e música</strong>
+        <p>Dragão do Mar, Rua dos Tabajaras e o clima urbano da cidade.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="bairros-fortaleza" aria-label="Bairros de Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Por onde começar</p>
+      <h2>Explore os bairros mais visitados</h2>
+    </div>
+    <div id="bairros-fortaleza-lista" class="bairros-grid"></div>
+  </section>
+
+  <section class="roteiros-fortaleza" aria-label="Roteiros prontos em Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Fortaleza em 1 dia</p>
+      <h2>Escolha o ritmo do seu passeio</h2>
+    </div>
+    <div id="roteiros-fortaleza-lista" class="roteiros-grid"></div>
+  </section>
+
+  <section class="cultura-local" aria-label="Cultura local em Fortaleza">
+    <div class="explore-intro">
+      <p class="eyebrow">Cultura local</p>
+      <h2>O que está rolando na cidade</h2>
+    </div>
+    <div id="destaques-culturais" class="cultura-grid"></div>
+  </section>
 
   <main class="layout">
     <section class="mapa-wrap">

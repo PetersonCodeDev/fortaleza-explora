@@ -1148,21 +1148,36 @@ const celular = () => matchMedia("(max-width:820px)").matches;
 // obrigava o navegador a recalcular o layout da página inteira).
 const fabs = $(".fabs"), toastEl = $("#toast");
 let medidas = null, hAtual = 0, altaVisivel = false;
-const medir = () => (medidas = { min: $("#alca").offsetHeight + $(".abas").offsetHeight + 2, meio: Math.round(innerHeight * 0.38), alto: Math.round(innerHeight * 0.78) });
+// as alturas partem da área do mapa (e não da tela), para a gaveta nunca subir por cima da busca e do banner
+const medir = () => { const util = $(".layout").clientHeight || innerHeight; return (medidas = { util, min: $("#alca").offsetHeight + $(".abas").offsetHeight + 2, meio: Math.round(util * 0.42), alto: Math.round(util * 0.92) }); };
 const alturas = () => medidas ?? medir();
 function aplicarAltura(px) {
   hAtual = px;
   // o painel tem sempre a altura "alto"; subir e descer é só deslocar (transform), que é barato
   painel.style.transform = `translate3d(0, ${alturas().alto - px}px, 0)`;
   fabs.style.transform = toastEl.style.transform = `translate3d(0, ${-px}px, 0)`;
-  const alta = px > innerHeight * 0.55; // botões flutuantes saem do caminho
+  const alta = px > alturas().util * 0.6; // botões flutuantes saem do caminho
   if (alta !== altaVisivel) { altaVisivel = alta; document.body.classList.toggle("gaveta-alta", alta); }
+}
+const painelOculto = () => $(".layout").classList.contains("sem-painel");
+function marcarPainel(oculto) {
+  $(".layout").classList.toggle("sem-painel", oculto);
+  painel.classList.toggle("is-hidden", oculto);
+  $("#btn-painel").setAttribute("aria-pressed", String(oculto));
+  $("#btn-painel").title = oculto ? "Mostrar a lista" : "Esconder a lista";
 }
 function definirGaveta(g) {
   estado.gaveta = g;
   if (celular()) {
+    if (g !== "min" && painelOculto()) marcarPainel(false); // pediu a lista: ela volta
     const a = medir();
     painel.style.height = `${a.alto}px`;
+    if (painelOculto()) { // sem gaveta, os botões flutuantes descem até o fim do mapa
+      hAtual = 0;
+      fabs.style.transform = toastEl.style.transform = "translate3d(0, 0, 0)";
+      document.body.classList.remove("gaveta-alta"); altaVisivel = false;
+      return;
+    }
     aplicarAltura(a[g]);
     $(".conteudo").style.paddingBottom = `${a.alto - a[g] + 20}px`; // o fim da lista continua alcançável com a gaveta baixa
   } else {
@@ -1207,13 +1222,23 @@ addEventListener("pointerup", soltar);
 addEventListener("pointercancel", soltar);
 addEventListener("resize", () => { medidas = null; definirGaveta(estado.gaveta); });
 $("#alca").onclick = () => moverGaveta(estado.gaveta === "alto" ? -1 : 1);
-// no computador: botão que esconde a lista e deixa o mapa inteiro livre
+if (celular()) {
+  $("#map").addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".leaflet-marker-icon, .leaflet-popup, .leaflet-control, .fab, .btn-aqui, #btn-painel, #painel, .folha")) return;
+    if (estado.gaveta !== "min") $("#btn-painel").click();
+  });
+}
+// botão que esconde/mostra a lista em qualquer tamanho de tela
 $("#btn-painel").onclick = () => {
-  const oculto = $(".layout").classList.toggle("sem-painel");
-  $("#btn-painel").setAttribute("aria-pressed", String(oculto));
-  $("#btn-painel").title = oculto ? "Mostrar a lista" : "Esconder a lista";
-  setTimeout(() => mapa.invalidateSize(), 50);
+  const oculto = !painelOculto();
+  marcarPainel(oculto);
+  if (celular()) definirGaveta(oculto ? "min" : estado.gaveta === "min" ? "meio" : estado.gaveta);
 };
+// o banner e o botão da lista mudam o tamanho do mapa sem redimensionar a janela: avisa o Leaflet e a gaveta
+new ResizeObserver(() => {
+  mapa.invalidateSize({ animate: false });
+  if (celular()) { medidas = null; definirGaveta(estado.gaveta); }
+}).observe($(".layout"));
 
 $("#btn-local").onclick = () => localizar();
 $("#btn-aqui").onclick = buscarNaArea;
